@@ -1,3 +1,4 @@
+import 'package:concon/screen/home/my_coupon_list.dart';
 import 'package:flutter/material.dart';
 
 class LoginPage extends StatelessWidget {
@@ -28,7 +29,7 @@ class LoginPage extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 15),
                   child: Image.asset(
-                    'lib/assets/login_logo.png',
+                    'assets/icon/login_logo.png',
                     width: 300,
                     height: 270,
                   ),
@@ -43,14 +44,32 @@ class LoginPage extends StatelessWidget {
                       backgroundColor:
                           WidgetStatePropertyAll(Color(0xffFDDC3F)),
                     ),
-                    onPressed: () {},
+                    onPressed: () {
+                      // 홈화면 전환 샘플(나중에 로그인 정상 연결 수행)
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        PageRouteBuilder(
+                          pageBuilder:
+                              (context, animation, secondaryAnimation) =>
+                                  MyCouponList(),
+                          transitionsBuilder:
+                              (context, animation, secondaryAnimation, child) {
+                            return FadeTransition(
+                              opacity: animation,
+                              child: child,
+                            );
+                          },
+                        ),
+                        (Route<dynamic> route) => false, // 이전의 모든 화면을 제거합니다.
+                      );
+                    },
                     child: Stack(
                       alignment: Alignment.center,
                       children: <Widget>[
                         Align(
                           alignment: Alignment.centerLeft,
                           child: Image.asset(
-                            'lib/assets/kakao_icon.png',
+                            'assets/icon/kakao_icon.png',
                             width: 20,
                             height: 20,
                           ),
@@ -91,7 +110,7 @@ class LoginPage extends StatelessWidget {
                         Align(
                           alignment: Alignment.centerLeft,
                           child: Image.asset(
-                            'lib/assets/naver_icon.png',
+                            'assets/icon/naver_icon.png',
                             width: 30,
                             height: 30,
                           ),
@@ -131,7 +150,7 @@ class LoginPage extends StatelessWidget {
                         Align(
                           alignment: Alignment.centerLeft,
                           child: Image.asset(
-                            'lib/assets/google_icon.png',
+                            'assets/icon/google_icon.png',
                             width: 25,
                             height: 25,
                           ),
@@ -170,7 +189,7 @@ class LoginPage extends StatelessWidget {
                         Align(
                           alignment: Alignment.centerLeft,
                           child: Image.asset(
-                            'lib/assets/apple_icon.png',
+                            'assets/icon/apple_icon.png',
                             width: 20,
                             height: 20,
                           ),
