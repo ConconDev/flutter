@@ -28,13 +28,21 @@ class MyCouponList extends StatelessWidget {
             ),
             Stack(
               children: <Widget>[
-                SizedBox(
-                  height: 150,
-                  width: 150,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(75.0),
-                    child: Image.asset('assets/user/user_image_sample.png'),
+                Padding(
+                  padding: const EdgeInsets.only(left: 25.0),
+                  child: SizedBox(
+                    height: 150,
+                    width: 150,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(75.0),
+                      child: Image.asset('assets/user/user_image_sample.png'),
+                    ),
                   ),
+                ),
+                Column(
+                  children: [
+                    Text("이름"),
+                  ],
                 ),
               ],
             )
