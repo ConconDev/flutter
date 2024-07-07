@@ -1,3 +1,5 @@
+import 'package:concon/screen/home/friends_list.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class MyCouponList extends StatefulWidget {
@@ -60,7 +62,7 @@ class _MyCouponListState extends State<MyCouponList> {
             Column(
               children: [
                 SizedBox(
-                  height: 207,
+                  height: 202,
                 ),
                 Expanded(
                   child: Container(
@@ -112,46 +114,72 @@ class _MyCouponListState extends State<MyCouponList> {
                                 Expanded(child: Container()),
                                 Row(
                                   mainAxisSize: MainAxisSize.min,
+                                  mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
-                                    IconButton(
+                                    CupertinoButton(
+                                      minSize: double.minPositive,
                                       onPressed: () {
                                         // 아이콘1 터치 시 화면 전환 구현
                                       },
-                                      icon: Icon(
+                                      padding: EdgeInsets.zero,
+                                      child: Icon(
+                                        size: 20,
                                         Icons.contacts,
                                         color: Colors.white,
                                       ),
-                                      padding: EdgeInsets.zero,
-                                      constraints: BoxConstraints(),
                                     ),
-                                    IconButton(
+                                    SizedBox(
+                                      width: 17,
+                                    ),
+                                    CupertinoButton(
+                                      minSize: double.minPositive,
                                       onPressed: () {
-                                        // 아이콘2 터치 시 화면 전환 구현
+                                        // 아이콘 2 터치 시 화면 전환 구현
+                                        Navigator.of(context).push(
+                                          PageRouteBuilder(
+                                            pageBuilder: (context, animation,
+                                                    secondaryAnimation) =>
+                                                FriendsList(),
+                                            transitionsBuilder: (context,
+                                                animation,
+                                                secondaryAnimation,
+                                                child) {
+                                              return FadeTransition(
+                                                opacity: animation,
+                                                child: child,
+                                              );
+                                            },
+                                          ),
+                                        );
                                       },
-                                      icon: Icon(
+                                      padding: EdgeInsets.zero,
+                                      child: Icon(
+                                        size: 20,
                                         Icons.person_search,
                                         color: Colors.white,
                                       ),
-                                      padding: EdgeInsets.zero,
-                                      constraints: BoxConstraints(),
                                     ),
-                                    IconButton(
+                                    SizedBox(
+                                      width: 12,
+                                    ),
+                                    CupertinoButton(
+                                      minSize: double.minPositive,
                                       onPressed: () {
                                         // 아이콘3 터치 시 화면 전환 구현
                                       },
-                                      icon: Icon(
+                                      padding: EdgeInsets.zero,
+                                      child: Icon(
+                                        size: 20,
                                         Icons.share,
                                         color: Colors.white,
                                       ),
-                                      padding: EdgeInsets.zero,
-                                      constraints: BoxConstraints(),
                                     ),
                                   ],
                                 ),
                               ],
                             ),
                             SizedBox(
-                              height: 10,
+                              height: 15,
                             ),
                             Row(
                               // 가입일(나중에 변수로 수정)
@@ -192,7 +220,7 @@ class _MyCouponListState extends State<MyCouponList> {
                   ),
                 ),
                 SizedBox(
-                  height: 20,
+                  height: 15,
                 ),
                 Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                   Padding(
