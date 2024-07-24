@@ -48,6 +48,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^3.0.0
+  o3d: ^3.1.2
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -109,12 +110,12 @@ flutter:
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "lib/assets/app_icon.png"
+  image_path: "assets/app_icon.png"
   min_sdk_android: 21 # android min sdk min:16, default 21
 
 flutter_native_splash:
   color: "#FFFAED"
-  image: lib/assets/splash_image.png
+  image: "assets/splash_image.png"
   android_12:
     icon_background_color: "#FFFAED"
 
