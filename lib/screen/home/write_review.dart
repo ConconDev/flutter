@@ -26,10 +26,12 @@ class _WriteReviewState extends State<WriteReview> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(  resizeToAvoidBottomInset: true,
+    return Scaffold(
+      resizeToAvoidBottomInset: true,
       extendBodyBehindAppBar: true,
       backgroundColor: Color(0xFFFFAF04),
       appBar: AppBar(
+        scrolledUnderElevation: 0,
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
@@ -87,8 +89,10 @@ class _WriteReviewState extends State<WriteReview> {
                               children: [
                                 SizedBox(height: 30),
                                 Container(
-                                  width: MediaQuery.of(context).size.width * 0.9,
-                                  height: MediaQuery.of(context).size.width * 0.9,
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.9,
+                                  height:
+                                      MediaQuery.of(context).size.width * 0.9,
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(10),
                                     boxShadow: [
@@ -107,9 +111,10 @@ class _WriteReviewState extends State<WriteReview> {
                                 ),
                                 SizedBox(height: 27),
                                 Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 23),
                                   child: Container(
-                                    padding: EdgeInsets.all(20),
+                                    padding: EdgeInsets.fromLTRB(15,20,20,20),
                                     decoration: BoxDecoration(
                                       color: Colors.white,
                                       borderRadius: BorderRadius.circular(20),
@@ -123,57 +128,71 @@ class _WriteReviewState extends State<WriteReview> {
                                       ],
                                     ),
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
-                                        Text(
-                                          widget.brand,
-                                          style: TextStyle(
-                                            fontFamily: 'Inter',
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.black,
+                                        Padding(
+                                         padding: const EdgeInsets.only(left: 5),
+                                          child: Text(
+                                            widget.brand,
+                                            style: TextStyle(
+                                              fontFamily: 'Inter',
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.black,
+                                            ),
                                           ),
                                         ),
                                         SizedBox(height: 5),
-                                        Text(
-                                          widget.productName,
-                                          style: TextStyle(
-                                            fontFamily: 'Inter',
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.black,
+                                        Padding(
+                                          padding: const EdgeInsets.only(left: 5),
+                                          child: Text(
+                                            widget.productName,
+                                            style: TextStyle(
+                                              fontFamily: 'Inter',
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.black,
+                                            ),
                                           ),
                                         ),
-                                        SizedBox(height: 5),
-                                        Text(
-                                          '${widget.date} 사용 완료',
-                                          style: TextStyle(
-                                            fontFamily: 'Inter',
-                                            fontSize: 14,
-                                            color: Colors.grey,
+                                        SizedBox(height: 10),
+                                        Padding(
+                                          padding: const EdgeInsets.only(left: 5),
+                                          child: Text(
+                                            '${widget.date} 사용 완료',
+                                            style: TextStyle(
+                                              fontFamily: 'Inter',
+                                              fontSize: 14,
+                                              color: Colors.grey,
+                                            ),
                                           ),
                                         ),
                                         SizedBox(height: 10),
                                         _buildRatingStars(),
                                         SizedBox(height: 10),
-                                        TextField(
-                                          scrollPadding: EdgeInsets.only(bottom: 150),
-                                          controller: _reviewController,
-                                          maxLines: null,
-                                          maxLength: 1000,
-                                          decoration: InputDecoration(
-                                            hintText: '솔직한 리뷰로 나만의 평가를 남겨보세요',
-                                            hintStyle: TextStyle(
+                                        Padding(
+                                          padding: const EdgeInsets.only(left: 5),
+                                          child: TextField(
+                                            scrollPadding:
+                                                EdgeInsets.only(bottom: 150),
+                                            controller: _reviewController,
+                                            maxLines: null,
+                                            maxLength: 1000,
+                                            decoration: InputDecoration(
+                                              hintText: '솔직한 리뷰로 나만의 평가를 남겨보세요',
+                                              hintStyle: TextStyle(
+                                                fontFamily: 'Inter',
+                                                fontSize: 14,
+                                                color: Colors.grey,
+                                              ),
+                                              border: InputBorder.none,
+                                            ),
+                                            style: TextStyle(
                                               fontFamily: 'Inter',
                                               fontSize: 14,
-                                              color: Colors.grey,
+                                              color: Colors.black,
                                             ),
-                                            border: InputBorder.none,
-                                          ),
-                                          style: TextStyle(
-                                            fontFamily: 'Inter',
-                                            fontSize: 14,
-                                            color: Colors.black,
                                           ),
                                         ),
                                       ],
@@ -200,7 +219,7 @@ class _WriteReviewState extends State<WriteReview> {
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
                   child: Container(
-                    color: Colors.white.withOpacity(0.6), // 흰색 반투명 배경 추가
+                    color: Colors.white.withOpacity(0.6),
                     height: 70,
                     width: double.infinity,
                   ),
@@ -242,49 +261,33 @@ class _WriteReviewState extends State<WriteReview> {
 
   Widget _buildRatingStars() {
     return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: List.generate(
         5,
         (index) {
-          if (_rating >= (index + 1)) {
-            return IconButton(
-              onPressed: () {
-                setState(() {
-                  _rating = index + 1.0;
-                });
-              },
-              icon: Icon(
-                Icons.star_rounded,
-                color: Colors.orange,
-                size: 30,
-              ),
-            );
-          } else if (_rating > index && _rating < (index + 1)) {
-            return IconButton(
-              onPressed: () {
-                setState(() {
-                  _rating = index + 0.5;
-                });
-              },
-              icon: Icon(
-                Icons.star_half_rounded,
-                color: Colors.orange,
-                size: 30,
-              ),
-            );
-          } else {
-            return IconButton(
-              onPressed: () {
-                setState(() {
-                  _rating = index + 0.5;
-                });
-              },
-              icon: Icon(
-                Icons.star_outline_rounded,
-                color: Colors.orange,
-                size: 30,
-              ),
-            );
-          }
+          return GestureDetector(
+            onTap: () {
+              setState(() {
+                _rating = index + 1.0;
+              });
+            },
+            onPanUpdate: (details) {
+              setState(() {
+                _rating =
+                    (index + details.localPosition.dx / 30).clamp(0.0, 5.0);
+              });
+            },
+            child: Icon(
+              _rating >= index + 1
+                  ? Icons.star_rounded
+                  : _rating > index
+                      ? Icons.star_half_rounded
+                      : Icons.star_outline_rounded,
+              color: Color(0xff484848),
+              size: 40,
+            ),
+          );
         },
       ),
     );
