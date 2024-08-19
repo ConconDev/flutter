@@ -1,3 +1,4 @@
+import 'package:concon/screen/home/my_coupon_list.dart';
 import 'package:flutter/material.dart';
 
 class PopupWidget extends StatelessWidget {
@@ -44,11 +45,13 @@ class PopupWidget extends StatelessWidget {
                   child: ElevatedButton(
                     onPressed: () {
                       Navigator.of(context).pop();
-
-                      // Navigator.pushReplacement(
-                      //   context,
-                      //   MaterialPageRoute(builder: (context) => Page()),
-                      // );
+                      if (success) {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => MyCouponList()),
+                        );
+                      }
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor:
