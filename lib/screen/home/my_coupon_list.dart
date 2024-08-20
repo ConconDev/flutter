@@ -1,3 +1,5 @@
+import 'package:concon/screen/home/friends_list.dart';
+import 'package:concon/screen/home/sharedRoom/shared_room.dart';
 import 'package:concon/screen/navigation_bar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -252,7 +254,13 @@ class _MyCouponListState extends State<MyCouponList> {
                               CupertinoButton(
                                 minSize: 0,
                                 onPressed: () {
-                                  // 아이콘1 터치 시 화면 전환 구현
+                                  // 공유방 화면 전환
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => SharedRoom(),
+                                    ),
+                                  );
                                 },
                                 padding: EdgeInsets.zero,
                                 child: Icon(
@@ -282,7 +290,13 @@ class _MyCouponListState extends State<MyCouponList> {
                               CupertinoButton(
                                 minSize: 0,
                                 onPressed: () {
-                                  // 아이콘 2 터치 시 화면 전환 구현
+                                  // 친구 목록 화면 전환
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => FriendsList(),
+                                    ),
+                                  );
                                 },
                                 padding: EdgeInsets.zero,
                                 child: Icon(
@@ -312,7 +326,7 @@ class _MyCouponListState extends State<MyCouponList> {
                               CupertinoButton(
                                 minSize: 0,
                                 onPressed: () {
-                                  // 아이콘3 터치 시 화면 전환 구현
+                                  // 카카오톡 URL 공유 구현
                                 },
                                 padding: EdgeInsets.zero,
                                 child: Icon(
