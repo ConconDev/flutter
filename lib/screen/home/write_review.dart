@@ -1,20 +1,27 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'dart:ui';
+
+import '../popup_widget.dart';
 
 class WriteReview extends StatefulWidget {
   final String image;
   final String brand;
   final String productName;
   final String date;
+  final double? initialRating;
+  final String? initialReviewText;
+  final bool isEditMode;
 
   const WriteReview({
-    Key? key,
+    super.key,
     required this.image,
     required this.brand,
     required this.productName,
     required this.date,
-  }) : super(key: key);
+    this.initialRating,
+    this.initialReviewText,
+    this.isEditMode = false, // 기본값은 false로, 작성 모드로 설정
+  });
 
   @override
   _WriteReviewState createState() => _WriteReviewState();
@@ -23,6 +30,16 @@ class WriteReview extends StatefulWidget {
 class _WriteReviewState extends State<WriteReview> {
   double _rating = 0.0;
   final TextEditingController _reviewController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.isEditMode) {
+      // 수정일 경우 초기 데이터 설정
+      _rating = widget.initialRating ?? 0.0;
+      _reviewController.text = widget.initialReviewText ?? '';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +53,7 @@ class _WriteReviewState extends State<WriteReview> {
         elevation: 0,
         centerTitle: true,
         title: Text(
-          '리뷰 작성',
+          widget.isEditMode ? '리뷰 수정' : '리뷰 작성',
           style: TextStyle(
             color: Colors.white,
             fontSize: 18,
@@ -50,6 +67,28 @@ class _WriteReviewState extends State<WriteReview> {
             Navigator.of(context).pop();
           },
         ),
+        actions: widget.isEditMode
+            ? [
+                IconButton(
+                  icon: Icon(Icons.delete, color: Colors.white),
+                  onPressed: () {
+                    // 삭제 버튼 눌렀을 때 처리
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return ChoicePopupWidget(
+                          message: "삭제 시 복구가 불가능합니다\n이 후기를 정말 삭제하시겠습니까?",
+                          onConfirm: () {
+                            // 삭제 로직 구현
+                            print("리뷰 삭제됨");
+                          },
+                        );
+                      },
+                    );
+                  },
+                )
+              ]
+            : null,
       ),
       body: GestureDetector(
         onTap: () {
@@ -114,7 +153,8 @@ class _WriteReviewState extends State<WriteReview> {
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 23),
                                   child: Container(
-                                    padding: EdgeInsets.fromLTRB(15,20,20,20),
+                                    padding:
+                                        EdgeInsets.fromLTRB(15, 20, 20, 20),
                                     decoration: BoxDecoration(
                                       color: Colors.white,
                                       borderRadius: BorderRadius.circular(20),
@@ -132,7 +172,8 @@ class _WriteReviewState extends State<WriteReview> {
                                           CrossAxisAlignment.start,
                                       children: [
                                         Padding(
-                                         padding: const EdgeInsets.only(left: 5),
+                                          padding:
+                                              const EdgeInsets.only(left: 5),
                                           child: Text(
                                             widget.brand,
                                             style: TextStyle(
@@ -145,7 +186,8 @@ class _WriteReviewState extends State<WriteReview> {
                                         ),
                                         SizedBox(height: 5),
                                         Padding(
-                                          padding: const EdgeInsets.only(left: 5),
+                                          padding:
+                                              const EdgeInsets.only(left: 5),
                                           child: Text(
                                             widget.productName,
                                             style: TextStyle(
@@ -158,7 +200,8 @@ class _WriteReviewState extends State<WriteReview> {
                                         ),
                                         SizedBox(height: 10),
                                         Padding(
-                                          padding: const EdgeInsets.only(left: 5),
+                                          padding:
+                                              const EdgeInsets.only(left: 5),
                                           child: Text(
                                             '${widget.date} 사용 완료',
                                             style: TextStyle(
@@ -172,7 +215,8 @@ class _WriteReviewState extends State<WriteReview> {
                                         _buildRatingStars(),
                                         SizedBox(height: 10),
                                         Padding(
-                                          padding: const EdgeInsets.only(left: 5),
+                                          padding:
+                                              const EdgeInsets.only(left: 5),
                                           child: TextField(
                                             scrollPadding:
                                                 EdgeInsets.only(bottom: 150),
@@ -233,6 +277,13 @@ class _WriteReviewState extends State<WriteReview> {
               child: ElevatedButton(
                 onPressed: () {
                   // 저장 버튼 눌렀을 때 처리
+                  if (widget.isEditMode) {
+                    // 수정 모드에서의 처리
+                    _updateReview();
+                  } else {
+                    // 작성 모드에서의 처리
+                    _saveReview();
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.white,
@@ -243,7 +294,7 @@ class _WriteReviewState extends State<WriteReview> {
                   ),
                 ),
                 child: Text(
-                  '저장하기',
+                  widget.isEditMode ? '수정하기' : '저장하기',
                   style: TextStyle(
                     fontSize: 18,
                     fontFamily: 'Inter',
@@ -257,6 +308,14 @@ class _WriteReviewState extends State<WriteReview> {
         ),
       ),
     );
+  }
+
+  void _saveReview() {
+    // 리뷰 저장 로직 구현
+  }
+
+  void _updateReview() {
+    // 리뷰 수정 로직 구현
   }
 
   Widget _buildRatingStars() {

@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../popup_widget.dart';
 import 'write_review.dart';
 
 class MyCouponList extends StatefulWidget {
@@ -578,6 +579,7 @@ class _MyCouponListState extends State<MyCouponList> {
     );
   }
 
+// 판매 바텀시트
   void _showSaleBottomSheet(BuildContext context, String status) {
     showModalBottomSheet(
       context: context,
@@ -654,6 +656,7 @@ class _MyCouponListState extends State<MyCouponList> {
     );
   }
 
+// 내 기프티콘 바텀시트
   void _showBottomSheet(BuildContext context, Map<String, dynamic> item) {
     showModalBottomSheet(
       context: context,
@@ -735,6 +738,18 @@ class _MyCouponListState extends State<MyCouponList> {
                 onTap: () {
                   // 삭제하기 동작 추가
                   Navigator.pop(context);
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return ChoicePopupWidget(
+                        message: "삭제 시 복구가 불가능합니다\n이 기프티콘을 정말 삭제하시겠습니까?",
+                        onConfirm: () {
+                          // 여기서 삭제 작업 수행
+                          print("기프티콘 삭제됨");
+                        },
+                      );
+                    },
+                  );
                 },
               ),
             ],
@@ -904,6 +919,7 @@ class _MyCouponListState extends State<MyCouponList> {
     );
   }
 
+// 내 기프티콘
   Widget blockList(String image, String brand, String productName, String date,
       String price, String category, String status, Map<String, dynamic> item) {
     Color backgroundColor;
@@ -1093,6 +1109,7 @@ class _MyCouponListState extends State<MyCouponList> {
     );
   }
 
+// 판매 중
   Widget blockListSale(String image, String brand, String productName,
       String date, String price, String category, String status) {
     // 상태에 따라 배경색과 텍스트 설정
@@ -1281,6 +1298,7 @@ class _MyCouponListState extends State<MyCouponList> {
     );
   }
 
+// 리뷰 목록
   Widget blockListReview(String image, String brand, String productName,
       String date, String reviewText, double rating) {
     return Padding(
@@ -1397,7 +1415,22 @@ class _MyCouponListState extends State<MyCouponList> {
               ],
             ),
           ),
-          onTap: () {},
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => WriteReview(
+                  image: image,
+                  brand: brand,
+                  productName: productName,
+                  date: date,
+                  initialRating: rating,
+                  initialReviewText: reviewText,
+                  isEditMode: true,
+                ),
+              ),
+            );
+          },
         ),
       ),
     );
