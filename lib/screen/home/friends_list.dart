@@ -4,6 +4,8 @@ import '../popup_widget.dart';
 import 'search_friends.dart'; // 새로 추가될 파일을 임포트
 
 class FriendsList extends StatefulWidget {
+  const FriendsList({super.key});
+
   @override
   _FriendsListState createState() => _FriendsListState();
 }

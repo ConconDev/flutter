@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class SearchFriends extends StatefulWidget {
+  const SearchFriends({super.key});
+
   @override
   _SearchFriendsState createState() => _SearchFriendsState();
 }

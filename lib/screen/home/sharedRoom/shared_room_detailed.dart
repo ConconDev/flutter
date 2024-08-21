@@ -6,7 +6,7 @@ import 'shared_room_add.dart'; // 공유방 추가/수정 화면
 class SharedRoomDetailed extends StatefulWidget {
   final Map<String, String> room;
 
-  SharedRoomDetailed({required this.room});
+  const SharedRoomDetailed({super.key, required this.room});
 
   @override
   State<SharedRoomDetailed> createState() => _SharedRoomDetailedState();
@@ -249,8 +249,8 @@ class _SharedRoomDetailedState extends State<SharedRoomDetailed> {
   Widget _buildMemberList() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: Container(
-        height: 80, // 적절한 높이로 설정
+      child: SizedBox(
+        height: 80,
         child: ListView.builder(
           scrollDirection: Axis.horizontal,
           itemCount: members.length,
@@ -427,7 +427,6 @@ class _SharedRoomDetailedState extends State<SharedRoomDetailed> {
                 ),
               ),
             ),
-            // X 아이콘 추가
             Positioned(
               top: 0,
               right: 0,
@@ -482,7 +481,7 @@ class _SharedRoomDetailedState extends State<SharedRoomDetailed> {
               Expanded(
                 child: _buildShadowedButton(
                   onPressed: () {
-                    // 기프티콘 추가 기능
+                    // 기프티콘 추가 화면 연결
                   },
                   backgroundColor: Color(0xFFFFB800),
                   text: '기프티콘 추가',

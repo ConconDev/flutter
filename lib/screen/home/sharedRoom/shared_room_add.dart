@@ -9,7 +9,7 @@ class SharedRoomAdd extends StatefulWidget {
   final List<Map<String, String>>? existingMembers;
   final String? roomImage;
 
-  SharedRoomAdd({this.roomName, this.existingMembers, this.roomImage});
+  const SharedRoomAdd({super.key, this.roomName, this.existingMembers, this.roomImage});
 
   @override
   _SharedRoomAddState createState() => _SharedRoomAddState();
@@ -19,7 +19,6 @@ class _SharedRoomAddState extends State<SharedRoomAdd> {
   List<Map<String, String>> members = [];
   String roomName = '';
   XFile? _imageFile;
-  File? _initialImageFile;
 
   final List<Map<String, String>> friendList = [
     {'username': 'Mia', 'image': 'assets/imgs/sample1.jpg'},
@@ -243,7 +242,7 @@ Widget _buildRoomImagePicker() {
   Widget _buildMemberList() {
     return members.isEmpty
         ? SizedBox.shrink()
-        : Container(
+        : SizedBox(
             height: 120,
             child: ListView.builder(
               controller: _scrollController,

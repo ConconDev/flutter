@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+// ignore: depend_on_referenced_packages
 import 'package:o3d/o3d.dart';
 
 class GiftDetailScreen extends StatefulWidget {

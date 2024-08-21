@@ -5,8 +5,7 @@ class PopupWidget extends StatelessWidget {
   final String message;
   final bool success;
 
-  const PopupWidget({required this.message, required this.success, Key? key})
-      : super(key: key);
+  const PopupWidget({required this.message, required this.success, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -91,8 +90,8 @@ class ChoicePopupWidget extends StatelessWidget {
   const ChoicePopupWidget({
     required this.message,
     required this.onConfirm,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -196,9 +195,13 @@ class ChoicePopupWidget extends StatelessWidget {
 
 class SimpleAlertPopupWidget extends StatelessWidget {
   final String message;
+  final VoidCallback? onConfirm; // onConfirm을 선택적으로 받도록 설정
 
-  const SimpleAlertPopupWidget({required this.message, Key? key})
-      : super(key: key);
+  const SimpleAlertPopupWidget({
+    required this.message,
+    this.onConfirm, // 선택적인 onConfirm
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -236,7 +239,11 @@ class SimpleAlertPopupWidget extends StatelessWidget {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
-                      Navigator.of(context).pop();
+                      if (onConfirm != null) {
+                        onConfirm!(); // onConfirm이 제공되었을 경우 호출
+                      } else {
+                        Navigator.of(context).pop(); // 기본 동작
+                      }
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Color(0xFF484848),

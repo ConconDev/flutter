@@ -1,3 +1,5 @@
+import 'package:concon/screen/home/my_coupon_list.dart';
+import 'package:concon/screen/setting/user_setting.dart';
 import 'package:flutter/material.dart';
 
 class CustomNavigationBar extends StatelessWidget {
@@ -11,11 +13,10 @@ class CustomNavigationBar extends StatelessWidget {
   void _onItemTapped(BuildContext context, int index) {
     switch (index) {
       case 0:
-        // Navigator.pushReplacement(
-        //   context,
-        //   MaterialPageRoute(builder: (context) => Page1()),
-        // );
-        print("1번");
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => MyCouponList()),
+        );
         break;
       case 1:
         // Navigator.pushReplacement(
@@ -32,11 +33,10 @@ class CustomNavigationBar extends StatelessWidget {
         print("3번");
         break;
       case 3:
-        // Navigator.pushReplacement(
-        //   context,
-        //   MaterialPageRoute(builder: (context) => Page4()),
-        // );
-        print("4번");
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => UserSetting()),
+        );
         break;
     }
   }
