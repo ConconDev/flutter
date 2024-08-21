@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../popup_widget.dart';
 import 'shared_room_add.dart';
-import 'shared_room_detailed.dart';
+import 'shared_room_detail.dart';
 
 class SharedRoom extends StatelessWidget {
   final List<Map<String, String>> sharedRooms = [
@@ -149,7 +149,7 @@ class SharedRoom extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => SharedRoomDetailed(room: room),
+                  builder: (context) => SharedRoomDetail(room: room),
                 ),
               );
             },

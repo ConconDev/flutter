@@ -1,5 +1,6 @@
 import 'package:concon/screen/home/my_coupon_list.dart';
 import 'package:concon/screen/setting/user_setting.dart';
+import 'package:concon/screen/upload_coupon.dart';
 import 'package:flutter/material.dart';
 
 class CustomNavigationBar extends StatelessWidget {
@@ -19,10 +20,10 @@ class CustomNavigationBar extends StatelessWidget {
         );
         break;
       case 1:
-        // Navigator.pushReplacement(
-        //   context,
-        //   MaterialPageRoute(builder: (context) => Page2()),
-        // );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => UploadCoupon()),
+        );
         print("2번");
         break;
       case 2:

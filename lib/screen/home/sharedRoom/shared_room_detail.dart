@@ -3,16 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'shared_room_add.dart'; // 공유방 추가/수정 화면
 
-class SharedRoomDetailed extends StatefulWidget {
+class SharedRoomDetail extends StatefulWidget {
   final Map<String, String> room;
 
-  const SharedRoomDetailed({super.key, required this.room});
+  const SharedRoomDetail({super.key, required this.room});
 
   @override
-  State<SharedRoomDetailed> createState() => _SharedRoomDetailedState();
+  State<SharedRoomDetail> createState() => _SharedRoomDetailState();
 }
 
-class _SharedRoomDetailedState extends State<SharedRoomDetailed> {
+class _SharedRoomDetailState extends State<SharedRoomDetail> {
   String _selectedSortOption = '만료일자순';
 
   final List<Map<String, String>> gifticons = [
