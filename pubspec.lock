@@ -226,10 +226,10 @@ packages:
     dependency: transitive
     description:
       name: flutter_plugin_android_lifecycle
-      sha256: "9d98bd47ef9d34e803d438f17fd32b116d31009f534a6fa5ce3a1167f189a6de"
+      sha256: "9ee02950848f61c4129af3d6ec84a1cfc0e47931abc746b03e7a3bc3e8ff6eda"
       url: "https://pub.dev"
     source: hosted
-    version: "2.0.21"
+    version: "2.0.22"
   flutter_test:
     dependency: "direct dev"
     description: flutter
@@ -417,7 +417,7 @@ packages:
     source: hosted
     version: "1.0.5"
   o3d:
-    dependency: "direct dev"
+    dependency: "direct main"
     description:
       name: o3d
       sha256: "21a59df175a56e02580610003026eacd9db936c8ab3e6048d2cc290560203602"
@@ -633,10 +633,10 @@ packages:
     dependency: transitive
     description:
       name: webview_flutter_android
-      sha256: c66651fba15f9d7ddd31daec42da8d6bce46c85610a7127e3ebcb39a4395c3c9
+      sha256: "6e64fcb1c19d92024da8f33503aaeeda35825d77142c01d0ea2aa32edc79fdc8"
       url: "https://pub.dev"
     source: hosted
-    version: "3.16.6"
+    version: "3.16.7"
   webview_flutter_platform_interface:
     dependency: transitive
     description:

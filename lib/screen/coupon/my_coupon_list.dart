@@ -1,11 +1,12 @@
-import 'package:concon/screen/home/friends_list.dart';
-import 'package:concon/screen/home/sharedRoom/shared_room.dart';
+import 'package:concon/screen/coupon/friends_list.dart';
+import 'package:concon/screen/coupon/sharedRoom/shared_room.dart';
 import 'package:concon/screen/navigation_bar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../popup_widget.dart';
+import 'detail/coupon_detail.dart';
 import 'write_review.dart';
 
 class MyCouponList extends StatefulWidget {
@@ -1097,9 +1098,22 @@ class _MyCouponListState extends State<MyCouponList> {
               onTap: () {
                 if (status == 'used') {
                   // 사용된 기프티콘일 때
-                  _showBottomSheet(context, item); // 여기서 item을 넘겨줍니다.
+                  _showBottomSheet(context, item);
                 } else {
-                  // 다른 상태일 때의 동작
+                   Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CouponDetail(
+                      image: image,
+                      barcode: '1234567890123',  // 실제 바코드 값으로 교체 필요
+                      productName: productName,
+                      brand: brand,
+                      expiryDate: date,
+                      price: price,
+                      categories: [category],
+                    ),
+                  ),
+                );
                 }
               },
             ),

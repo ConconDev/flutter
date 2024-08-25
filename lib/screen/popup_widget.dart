@@ -1,4 +1,4 @@
-import 'package:concon/screen/home/my_coupon_list.dart';
+import 'package:concon/screen/coupon/my_coupon_list.dart';
 import 'package:flutter/material.dart';
 
 class PopupWidget extends StatelessWidget {
