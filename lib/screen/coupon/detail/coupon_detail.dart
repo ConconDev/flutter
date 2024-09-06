@@ -12,7 +12,7 @@ class CouponDetail extends StatefulWidget {
   final String price;
   final List<String> categories;
 
-  CouponDetail({
+  const CouponDetail({super.key, 
     required this.image,
     required this.barcode,
     required this.productName,

@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Market with Babylon.js</title>
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+    <script src="https://cdn.babylonjs.com/gui/babylon.gui.min.js"></script>
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+            background-color: transparent;
+        }
+
+        #renderCanvas {
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+            background-color: transparent;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="renderCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById("renderCanvas");
+        const engine = new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true });
+
+        const createScene = function () {
+            const scene = new BABYLON.Scene(engine);
+            scene.clearColor = new BABYLON.Color4(0, 0, 0, 0);
+
+            const camera = new BABYLON.UniversalCamera("camera", new BABYLON.Vector3(0, 5, -20), scene);
+            camera.setTarget(BABYLON.Vector3.Zero());
+            camera.attachControl(canvas, false);
+            camera.inputs.clear();
+            camera.rotation = new BABYLON.Vector3(0, 0, 0);
+
+            let isPointerDown = false;
+            let previousPosition = { x: 0, y: 0 };
+
+            scene.onPointerObservable.add((pointerInfo) => {
+                switch (pointerInfo.type) {
+                    case BABYLON.PointerEventTypes.POINTERDOWN:
+                        isPointerDown = true;
+                        previousPosition.x = pointerInfo.event.clientX;
+                        previousPosition.y = pointerInfo.event.clientY;
+                        break;
+                    case BABYLON.PointerEventTypes.POINTERUP:
+                        isPointerDown = false;
+                        break;
+                    case BABYLON.PointerEventTypes.POINTERMOVE:
+                        if (isPointerDown) {
+                            const deltaX = pointerInfo.event.clientX - previousPosition.x;
+                            const deltaY = pointerInfo.event.clientY - previousPosition.y;
+
+                            camera.position.x -= deltaX * 0.01;
+                            camera.position.z += deltaY * 0.01;
+                            camera.rotation.x = 0;
+                            camera.rotation.y = 0;
+                            camera.rotation.z = 0;
+
+                            previousPosition.x = pointerInfo.event.clientX;
+                            previousPosition.y = pointerInfo.event.clientY;
+                        }
+                        break;
+                }
+            });
+
+            const ground = BABYLON.MeshBuilder.CreateGround("ground", { width: 50, height: 50 }, scene);
+            const groundMaterial = new BABYLON.StandardMaterial("groundMat", scene);
+            groundMaterial.diffuseColor = new BABYLON.Color3(1, 1, 1);
+            groundMaterial.alpha = 0.8;
+            ground.material = groundMaterial;
+            ground.receiveShadows = true;
+
+            const light = new BABYLON.DirectionalLight("dirLight", new BABYLON.Vector3(-1, -2, -1), scene);
+            light.position = new BABYLON.Vector3(20, 40, 20);
+            const shadowGenerator = new BABYLON.ShadowGenerator(1024, light);
+            shadowGenerator.useBlurExponentialShadowMap = true;
+            shadowGenerator.blurKernel = 32;
+            shadowGenerator.setDarkness(0.5);
+
+            BABYLON.SceneLoader.Append("https://models.babylonjs.com/", "BoomBox.glb", scene, function () {
+                console.log("3D 모델 로드 완료!");
+            });
+
+            function createUser(position, name, info) {
+                const body = BABYLON.MeshBuilder.CreateSphere("body", { diameterX: 2.8, diameterY: 2, diameterZ: 2.8 }, scene);
+                body.position = new BABYLON.Vector3(position.x, position.y - 0.1, position.z);
+                body.material = new BABYLON.StandardMaterial("bodyMat", scene);
+                body.material.diffuseColor = new BABYLON.Color3(0.5, 0.5, 0.5);
+                body.receiveShadows = true;
+
+                const head = BABYLON.MeshBuilder.CreateSphere("head", { diameter: 1.8 }, scene);
+                head.position = new BABYLON.Vector3(position.x, position.y + 2, position.z);
+                head.material = new BABYLON.StandardMaterial("headMat", scene);
+                head.material.diffuseColor = new BABYLON.Color3(1, 1, 1);
+                head.receiveShadows = true;
+
+                shadowGenerator.addShadowCaster(body);
+                shadowGenerator.addShadowCaster(head);
+
+                const namePlane = BABYLON.MeshBuilder.CreatePlane("namePlane", { width: 10, height: 10 }, scene);
+                namePlane.position = new BABYLON.Vector3(position.x, position.y + 3.3, position.z);
+                namePlane.billboardMode = BABYLON.Mesh.BILLBOARDMODE_ALL;
+
+                const nameTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateForMesh(namePlane);
+                const nameContainer = new BABYLON.GUI.Rectangle();
+                nameContainer.width = "180px";
+                nameContainer.height = "50px";
+                nameContainer.cornerRadius = 30;
+                nameContainer.thickness = 0;
+                nameContainer.background = "rgba(0, 0, 0, 0.7)";
+                nameTexture.addControl(nameContainer);
+
+                const nameText = new BABYLON.GUI.TextBlock();
+                nameText.text = name;
+                nameText.color = "white";
+                nameText.fontSize = "22";
+                nameContainer.addControl(nameText);
+
+                const plane = BABYLON.MeshBuilder.CreatePlane("plane", { width: 7, height: 3.5 }, scene);
+                plane.position = new BABYLON.Vector3(position.x, position.y + 5.5, position.z);
+                plane.billboardMode = BABYLON.Mesh.BILLBOARDMODE_ALL;
+
+                const advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateForMesh(plane, 2048, 1024);
+
+                const mainContainer = new BABYLON.GUI.Rectangle();
+                mainContainer.width = "100%";
+                mainContainer.height = "100%";
+                mainContainer.cornerRadius = 50;
+                mainContainer.color = "white";
+                mainContainer.thickness = 0;
+                mainContainer.background = "rgba(0, 0, 0, 0.7)";
+                advancedTexture.addControl(mainContainer);
+
+                const grid = new BABYLON.GUI.Grid();
+                grid.addColumnDefinition(0.5);
+                grid.addColumnDefinition(0.5);
+                grid.addRowDefinition(0.15);
+                grid.addRowDefinition(0.4);
+                grid.addRowDefinition(0.4);
+                grid.addRowDefinition(0.03);
+                mainContainer.addControl(grid);
+
+                const leftTitle = new BABYLON.GUI.TextBlock();
+                leftTitle.text = "판매중";
+                leftTitle.color = "white";
+                leftTitle.fontSize = "80px";
+                leftTitle.textHorizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
+                leftTitle.textVerticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_CENTER;
+                leftTitle.paddingTop = "40px";
+                grid.addControl(leftTitle, 0, 0);
+
+                const rightTitle = new BABYLON.GUI.TextBlock();
+                rightTitle.text = "후기";
+                rightTitle.color = "white";
+                rightTitle.fontSize = "80px";
+                rightTitle.textHorizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
+                rightTitle.textVerticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_CENTER;
+                rightTitle.paddingTop = "40px";
+                grid.addControl(rightTitle, 0, 1);
+
+                // 흰색 박스와 텍스트 수정
+                function createWhiteBox(grid, row, column, title, subtext, isReview = false, message = '') {
+                    const whiteBox = new BABYLON.GUI.Rectangle();
+                    whiteBox.width = "90%";
+                    whiteBox.height = "80%";
+                    whiteBox.cornerRadius = 30;
+                    whiteBox.color = "white";
+                    whiteBox.thickness = 0;
+                    whiteBox.background = "rgba(255, 255, 255, 0.8)";
+                    whiteBox.onPointerDownObservable.add(() => {
+                        // 박스 터치 시 Flutter로 고유 메시지 전송
+                        if (window.flutter_inappwebview) {
+                            window.flutter_inappwebview.callHandler('onBoxClick', message);
+                        } else if (window.onBoxClick) {
+                            window.onBoxClick.postMessage(message);
+                        } else {
+                            console.log('Flutter 통신 채널이 설정되지 않았습니다.');
+                        }
+                    });
+                    grid.addControl(whiteBox, row, column);
+
+                    const text = new BABYLON.GUI.TextBlock();
+                    text.text = title;
+                    text.color = "black";
+                    text.fontSize = "60px";
+                    text.fontWeight = "bold";
+                    text.textHorizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
+                    text.textVerticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP;
+                    text.paddingTop = "60px";
+                    whiteBox.addControl(text);
+
+                    if (isReview) {
+                        // 후기 별점
+                        const ratingText = new BABYLON.GUI.TextBlock();
+                        ratingText.text = subtext.split('\n')[0];
+                        ratingText.color = "gray";
+                        ratingText.fontSize = "45px";
+                        ratingText.textHorizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
+                        ratingText.textVerticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_CENTER;
+                        ratingText.paddingTop = "20px";
+                        ratingText.paddingBottom = "0px";
+                        whiteBox.addControl(ratingText);
+
+                        // 후기 본문 - 글자수 제한 적용
+                        const reviewText = new BABYLON.GUI.TextBlock();
+                        reviewText.text = truncateText(subtext.split('\n')[1], 22);
+                        reviewText.color = "gray";
+                        reviewText.fontSize = "45px";
+                        reviewText.textHorizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
+                        reviewText.textVerticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
+                        reviewText.paddingTop = "0px";
+                        reviewText.paddingBottom = "50px";
+                        whiteBox.addControl(reviewText);
+                    } else {
+                        // 판매중 가격 - 글자수 제한 적용
+                        const subText = new BABYLON.GUI.TextBlock();
+                        subText.text = truncateText(subtext, 15);
+                        subText.color = "gray";
+                        subText.fontSize = "45px";
+                        subText.textHorizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
+                        subText.textVerticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
+                        subText.paddingTop = "5px";
+                        subText.paddingBottom = "50px";
+                        whiteBox.addControl(subText);
+                    }
+                }
+
+                // 텍스트 길이 제한
+                function truncateText(text, maxLength) {
+                    if (text.length > maxLength) {
+                        return text.substring(0, maxLength) + '...';
+                    }
+                    return text;
+                }
+
+                createWhiteBox(grid, 1, 0, "스타벅스\n카페 아메리카노 Tall", "4500원 → 3000원", false, '판매중 박스 1 클릭됨');
+                createWhiteBox(grid, 2, 0, "스타벅스\n카페 아메리카노 Tall", "4500원 → 3000원", false, '판매중 박스 2 클릭됨');
+                createWhiteBox(grid, 1, 1, "스타벅스 카페라떼 커플세트", "★ 3.5\n커플세트인데 혼자 다 마셔버릴 정도로 너무 맛있어요", true, '후기 박스 1 클릭됨');
+                createWhiteBox(grid, 2, 1, "스타벅스 행복한 기운 ICE", "★ 3.5\n저 케이크가 진짜 최고의 맛인 것 같아요 포슬하고 부드러움", true, '후기 박스 2 클릭됨');
+            }
+
+            createUser(new BABYLON.Vector3(-4, 1.5, 0), "Tim", "판매 목록\n스타벅스 카페 아메리카노 Tall\n가격: 4500원 + 3000원\n후기: 카페라떼 커플세트 - 평점: 3.5");
+            createUser(new BABYLON.Vector3(4, 1.5, 4), "Mia", "판매 목록\n스타벅스 블랙커피\n가격: 4000원 + 2000원\n후기: 블랙커피 - 평점: 4.0");
+
+            const advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+            return scene;
+        };
+
+        const scene = createScene();
+
+        engine.runRenderLoop(function () {
+            scene.render();
+        });
+
+        window.addEventListener("resize", function () {
+            engine.resize();
+        });
+    </script>
+</body>
+
+</html>

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class CouponDetailChat extends StatefulWidget {
+  const CouponDetailChat({super.key});
+
   @override
   _CouponDetailChatState createState() => _CouponDetailChatState();
 }

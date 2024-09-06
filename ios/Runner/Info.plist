@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 	<dict>
+		<key>io.flutter.embedded_views_preview</key>
+		<true/>
+		<key>NSCameraUsageDescription</key>
+		<string>We need camera access to show augmented reality experience.</string>
 		<key>CFBundleDevelopmentRegion</key>
 		<string>$(DEVELOPMENT_LANGUAGE)</string>
 		<key>CFBundleDisplayName</key>
@@ -51,5 +55,10 @@
 		<string>사진을 선택하기 위해 사진 라이브러리에 접근합니다.</string>
 		<key>NSCameraUsageDescription</key>
 		<string>카메라를 사용하기 위해 접근합니다.</string>
+	</dict>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+  	<key>NSAllowsArbitraryLoads</key>
+  	<true/>
 	</dict>
 </plist>

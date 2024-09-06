@@ -10,6 +10,8 @@ import '../config.dart';
 import 'navigation_bar.dart';
 
 class UploadCoupon extends StatefulWidget {
+  const UploadCoupon({super.key});
+
   @override
   _UploadCouponState createState() => _UploadCouponState();
 }
@@ -328,7 +330,7 @@ Future<void> _selectDate(BuildContext context) async {
               // 날짜에서 숫자가 아닌 문자를 "0"으로 대체
               expiryDate = line.replaceAll(RegExp(r'\D'), '0');
               expiryDate =
-                  "${expiryDate!.substring(0, 4)}.${expiryDate.substring(4, 6)}.${expiryDate.substring(6, 8)}";
+                  "${expiryDate.substring(0, 4)}.${expiryDate.substring(4, 6)}.${expiryDate.substring(6, 8)}";
               expiryDateFound = true;
             }
 
@@ -350,7 +352,7 @@ Future<void> _selectDate(BuildContext context) async {
             var line = lines[lines.length - 2].trim();
             expiryDate = line.replaceAll(RegExp(r'\D'), '0');
             expiryDate =
-                "${expiryDate!.substring(0, 4)}.${expiryDate.substring(4, 6)}.${expiryDate.substring(6, 8)}";
+                "${expiryDate.substring(0, 4)}.${expiryDate.substring(4, 6)}.${expiryDate.substring(6, 8)}";
           }
         }
 

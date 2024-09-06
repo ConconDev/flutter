@@ -1,3 +1,14 @@
+buildscript {
+    ext.kotlin_version = '1.6.10'  // 최신 Kotlin 버전으로 변경
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.1.0'  // 최신 Gradle 버전으로 설정
+    }
+}
+
 allprojects {
     repositories {
         google()
