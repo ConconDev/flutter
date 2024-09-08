@@ -1,0 +1,1 @@
+assets/3ds/theater.bin filter=lfs diff=lfs merge=lfs -text
