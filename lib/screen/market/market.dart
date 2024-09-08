@@ -1,7 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:camera/camera.dart'; // 카메라 플러그인 추가
-import 'package:webview_flutter/webview_flutter.dart'; // 웹뷰 플러그인 추가
-import '../navigation_bar.dart'; // 네비게이션 바 추가
+import 'package:camera/camera.dart';
+import 'package:webview_flutter/webview_flutter.dart';
+import '../navigation_bar.dart';
+import 'market_sale.dart';
+import 'transaction_history.dart';
 
 class MarketScreen extends StatefulWidget {
   const MarketScreen({super.key});
@@ -13,6 +16,8 @@ class MarketScreen extends StatefulWidget {
 class _MarketScreenState extends State<MarketScreen> {
   late final WebViewController _controller;
   bool isWebViewLoaded = false;
+  bool isWebViewPaused = false; // 웹뷰가 멈춰있는 상태를 나타내는 변수
+  bool isLoading = false; // 화면 전환 로딩 상태 변수 추가
   CameraController? _cameraController;
   List<CameraDescription>? cameras;
   final LayerLink _layerLink = LayerLink(); // LayerLink 생성
@@ -64,28 +69,133 @@ class _MarketScreenState extends State<MarketScreen> {
   }
 
   // JavaScript 메시지 처리 함수
-  void _handleJavaScriptMessage(String message) {
+  void _handleJavaScriptMessage(String message) async {
     switch (message) {
       case '판매중 박스 1 클릭됨':
         print('판매중 첫 번째 박스가 클릭되었습니다.');
-        break;
+        break; // break 추가
       case '판매중 박스 2 클릭됨':
         print('판매중 두 번째 박스가 클릭되었습니다.');
-        break;
+        break; // break 추가
       case '후기 박스 1 클릭됨':
         print('후기 첫 번째 박스가 클릭되었습니다.');
-        break;
+        break; // break 추가
       case '후기 박스 2 클릭됨':
         print('후기 두 번째 박스가 클릭되었습니다.');
-        break;
+        break; // break 추가
       default:
         print('알 수 없는 박스가 클릭되었습니다.');
     }
   }
 
+  // 웹뷰 멈추기 함수
+  void _pauseWebView() {
+    if (!isWebViewPaused) {
+      _controller.runJavaScript("document.body.style.display = 'none';"); // 웹뷰 내용 숨기기
+      setState(() {
+        isWebViewPaused = true;
+      });
+    }
+  }
+
+  // 웹뷰 다시 시작하기 함수
+  void _resumeWebView() {
+    if (isWebViewPaused) {
+      _controller.runJavaScript("document.body.style.display = 'block';"); // 웹뷰 내용 보이기
+      setState(() {
+        isWebViewPaused = false;
+      });
+    }
+  }
+
+  // 화면 전환 시 로딩 인디케이터 표시 및 상태 관리 함수
+  Future<void> _navigateWithLoadingIndicator(
+      BuildContext context, Widget Function(FileImage) screenBuilder) async {
+    setState(() {
+      isLoading = true; // 로딩 시작
+    });
+
+    if (_cameraController != null && _cameraController!.value.isInitialized) {
+      try {
+        // 카메라 화면 캡처
+        final image = await _cameraController!.takePicture();
+        final File imageFile = File(image.path); // 캡처된 이미지를 File로 저장
+
+        // 파일이 실제로 존재하는지 확인
+        if (!await imageFile.exists()) {
+          print('Error: Captured image file does not exist.');
+          setState(() {
+            isLoading = false; // 로딩 종료
+          });
+          return;
+        }
+
+        final FileImage imageProvider = FileImage(imageFile);
+
+        if (!mounted) {
+          setState(() {
+            isLoading = false; // 로딩 종료
+          });
+          return; // 화면이 사라졌을 때 예외 방지
+        }
+
+        // 웹뷰와 카메라 프리뷰 일시정지
+        _pauseWebView();
+        _pauseCameraPreview();
+
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (BuildContext context) => screenBuilder(imageProvider), // 화면 전환
+          ),
+        );
+
+        _resumeWebView(); // 화면에서 돌아올 때 웹뷰 다시 시작
+        _resumeCameraPreview(); // 카메라 프리뷰 다시 시작
+      } catch (e) {
+        print('Error while navigating: $e');
+      } finally {
+        setState(() {
+          isLoading = false; // 로딩 종료
+        });
+      }
+    }
+  }
+
+  // 판매 화면 전환 함수
+  void _navigateToSaleScreen(BuildContext context) {
+    _navigateWithLoadingIndicator(
+        context, (imageProvider) => MarketSaleScreen(backgroundImage: imageProvider));
+  }
+
+  // 거래 내역 확인 화면으로 전환하는 함수
+  void _navigateToTransactionHistoryScreen(BuildContext context) {
+    _navigateWithLoadingIndicator(
+        context, (imageProvider) => TransactionHistoryScreen(backgroundImage: imageProvider));
+  }
+
   // HTML 로드 함수
   void _loadHtml() async {
     await _controller.loadFlutterAsset('assets/babylon_view.html');
+  }
+
+  // 카메라 프리뷰를 화면에 맞추는 위젯 수정
+  Widget _buildCameraPreview() {
+    final size = MediaQuery.of(context).size; // 화면 크기
+    final deviceRatio = size.height / size.width; // 화면 비율 반전
+    final previewRatio = _cameraController!.value.aspectRatio; // 카메라 프리뷰 비율
+
+    return Transform.scale(
+      scale: deviceRatio > previewRatio
+          ? deviceRatio / previewRatio
+          : previewRatio / deviceRatio, // 화면에 맞게 스케일 조정
+      child: Center(
+        child: AspectRatio(
+          aspectRatio: 1 / _cameraController!.value.aspectRatio, // 비율 반전
+          child: CameraPreview(_cameraController!), // 카메라 프리뷰 위젯
+        ),
+      ),
+    );
   }
 
   // 카메라 초기화 함수
@@ -94,10 +204,18 @@ class _MarketScreenState extends State<MarketScreen> {
     if (cameras!.isNotEmpty) {
       _cameraController = CameraController(
         cameras!.first,
-        ResolutionPreset.medium,
+        ResolutionPreset.max, // 해상도 높게 설정
+        imageFormatGroup: ImageFormatGroup.jpeg, // 이미지 포맷 설정
       );
 
+      // 카메라 컨트롤러 초기화
       await _cameraController!.initialize();
+
+      // 세로 모드 고정 설정
+      if (_cameraController!.description.lensDirection == CameraLensDirection.front) {
+        await _cameraController!.setFocusMode(FocusMode.auto);
+      }
+
       setState(() {}); // 카메라 초기화 후 화면 재렌더링
     }
   }
@@ -114,6 +232,7 @@ class _MarketScreenState extends State<MarketScreen> {
       _overlayEntry!.remove();
       _overlayEntry = null;
       _resumeCameraPreview(); // 팝업 닫힐 때 카메라 다시 시작
+      _resumeWebView(); // 웹뷰 다시 시작
     }
   }
 
@@ -129,87 +248,6 @@ class _MarketScreenState extends State<MarketScreen> {
     }
   }
 
-  void _showCustomMenu(BuildContext context) {
-    if (_overlayEntry != null) {
-      _removeOverlay(); // 기존 OverlayEntry 제거
-      return;
-    }
-
-    _pauseCameraPreview(); // 팝업 열릴 때 카메라 멈추기
-
-    final overlay = Overlay.of(context)!;
-    _overlayEntry = OverlayEntry(
-      builder: (context) => GestureDetector(
-        behavior: HitTestBehavior.translucent, // 터치 이벤트가 감지되도록 설정
-        onTap: () {
-          _removeOverlay(); // 팝업 외부를 눌렀을 때 팝업 제거
-        },
-        child: Stack(
-          children: [
-            Positioned(
-              width: 140, // 팝업 너비 설정
-              child: CompositedTransformFollower(
-                link: _layerLink,
-                showWhenUnlinked: false,
-                offset: Offset(-90, 50), // 아이콘 바로 아래에 위치하도록 오프셋 설정 (왼쪽으로 조정)
-                child: Material(
-                  color: Colors.transparent,
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.deferToChild, // 자식 위젯의 터치 이벤트가 우선되도록 설정
-                    onTap: () {}, // 팝업 내 터치 시 닫히지 않도록 빈 콜백 사용
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.7), // 배경색 흰색에 투명도 70%
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.stretch, // 전체 너비에 맞춰서 가운데 정렬
-                        children: [
-                          InkWell( // InkWell로 각 메뉴 항목을 감싸서 터치 이벤트를 쉽게 처리
-                            onTap: () {
-                              print('기프티콘 판매 선택됨');
-                              _removeOverlay(); // 메뉴 항목 선택 시 팝업 닫기
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 12),
-                              child: Text(
-                                '기프티콘 판매',
-                                style: TextStyle(color: Colors.black),
-                                textAlign: TextAlign.center, // 텍스트 가운데 정렬
-                              ),
-                            ),
-                          ),
-                          Divider(height: 1, thickness: 1, color: Colors.grey[300]), // 구분선
-                          InkWell( // 두 번째 메뉴 항목도 InkWell로 감싸기
-                            onTap: () {
-                              print('거래 내역 확인 선택됨');
-                              _removeOverlay(); // 메뉴 항목 선택 시 팝업 닫기
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 12),
-                              child: Text(
-                                '거래 내역 확인',
-                                style: TextStyle(color: Colors.black),
-                                textAlign: TextAlign.center, // 텍스트 가운데 정렬
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-
-    overlay.insert(_overlayEntry!);
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -217,7 +255,8 @@ class _MarketScreenState extends State<MarketScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: Builder( // Builder로 감싸서 새로운 context 제공
+        leading: Builder(
+          // Builder로 감싸서 새로운 context 제공
           builder: (context) {
             return IconButton(
               padding: EdgeInsets.only(left: 20),
@@ -241,38 +280,60 @@ class _MarketScreenState extends State<MarketScreen> {
             ),
             onPressed: () {},
           ),
-          CompositedTransformTarget(
-            link: _layerLink,
-            child: IconButton(
-              icon: Icon(
-                Icons.menu,
-                color: Colors.black54.withOpacity(0.7),
-              ),
-              onPressed: () {
-                _showCustomMenu(context); // 메뉴 표시 함수 호출
-              },
+          IconButton(
+            icon: Icon(
+              Icons.add_business_outlined,
+              color: Colors.black54.withOpacity(0.7),
             ),
+            onPressed: () {
+              _navigateToSaleScreen(context);
+            },
+          ),
+          IconButton(
+            icon: Icon(
+              Icons.format_list_numbered,
+              color: Colors.black54.withOpacity(0.7),
+            ),
+            onPressed: () {
+              _navigateToTransactionHistoryScreen(context); // TransactionHistoryScreen으로 전환
+            },
           ),
           SizedBox(width: 15),
         ],
       ),
       drawer: _buildDrawer(),
-      onDrawerChanged: (isOpened) { // Drawer 열림/닫힘 상태 감지
+      onDrawerChanged: (isOpened) {
+        // Drawer 열림/닫힘 상태 감지
         if (isOpened) {
           _pauseCameraPreview(); // Drawer가 열릴 때 카메라 멈춤
+          _pauseWebView(); // Drawer가 열릴 때 웹뷰 멈춤
         } else {
           _resumeCameraPreview(); // Drawer가 닫힐 때 카메라 재개
+          _resumeWebView(); // Drawer가 닫힐 때 웹뷰 재개
         }
       },
       bottomNavigationBar: CustomNavigationBar(currentIndex: 2),
       body: Stack(
         children: [
           if (_cameraController != null && _cameraController!.value.isInitialized)
-            CameraPreview(_cameraController!),  // 카메라 프리뷰 위젯
+            Positioned.fill(
+              child: _buildCameraPreview(), // 수정된 카메라 프리뷰 위젯 사용
+            ),
           if (isWebViewLoaded)
-            WebViewWidget(controller: _controller),  // 웹뷰 위젯
+            Positioned.fill(
+              child: WebViewWidget(controller: _controller), // 웹뷰 위젯
+            ),
           if (!isWebViewLoaded)
-            const Center(child: CircularProgressIndicator()),  // 로딩 인디케이터
+            const Center(
+                child: CircularProgressIndicator(
+              color: Colors.black54,
+            )), // 로딩 인디케이터
+          if (isLoading) // 로딩 상태일 때 로딩 인디케이터 표시
+            Center(
+              child: CircularProgressIndicator(
+                color: Colors.orange,
+              ),
+            ),
         ],
       ),
     );
@@ -289,27 +350,39 @@ class _MarketScreenState extends State<MarketScreen> {
           _buildDrawerSectionTitle('화면 전환', centered: true), // 가운데 정렬
           Divider(), // 유저 바꾸기 위에 구분선 추가
           _buildDrawerItem('유저 바꾸기', onTap: () {
-            // 유저 바꾸기 로직
+            Navigator.pop(context); // Drawer 닫기
+            _resumeCameraPreview();
+            _resumeWebView();
           }),
           Divider(), // 구분선 추가
           Padding(
-            padding: const EdgeInsets.fromLTRB(15,10,0,10),
+            padding: const EdgeInsets.fromLTRB(15, 10, 0, 10),
             child: _buildDrawerSectionTitle('카테고리 바꾸기'),
           ),
           _buildDrawerItem('카페 · 디저트', onTap: () {
-            // 카테고리 변경 로직
+            Navigator.pop(context); // Drawer 닫기
+            _resumeCameraPreview();
+            _resumeWebView();
           }),
           _buildDrawerItem('영화 · 엔터테인먼트', onTap: () {
-            // 카테고리 변경 로직
+            Navigator.pop(context); // Drawer 닫기
+            _resumeCameraPreview();
+            _resumeWebView();
           }),
           _buildDrawerItem('치킨 · 패스트푸드', onTap: () {
-            // 카테고리 변경 로직
+            Navigator.pop(context); // Drawer 닫기
+            _resumeCameraPreview();
+            _resumeWebView();
           }),
           _buildDrawerItem('편의점 · 마트', onTap: () {
-            // 카테고리 변경 로직
+            Navigator.pop(context); // Drawer 닫기
+            _resumeCameraPreview();
+            _resumeWebView();
           }),
           _buildDrawerItem('여행 · 숙박', onTap: () {
-            // 카테고리 변경 로직
+            Navigator.pop(context); // Drawer 닫기
+            _resumeCameraPreview();
+            _resumeWebView();
           }),
         ],
       ),
