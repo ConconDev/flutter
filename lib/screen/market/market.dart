@@ -5,6 +5,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 import '../navigation_bar.dart';
 import 'market_sale.dart';
 import 'transaction_history.dart';
+import 'user_profile.dart'; // user_profile.dart import 추가
 
 class MarketScreen extends StatefulWidget {
   const MarketScreen({super.key});
@@ -32,80 +33,78 @@ class _MarketScreenState extends State<MarketScreen> {
 
   // 웹뷰 초기화 함수
   void _initializeWebView() {
-    _controller = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..addJavaScriptChannel(
-        'onBoxClick',
-        onMessageReceived: (JavaScriptMessage message) {
-          _handleJavaScriptMessage(message.message); // 메시지 처리 함수 호출
-        },
-      )
-      ..setBackgroundColor(const Color(0x00000000))
-      ..setNavigationDelegate(
-        NavigationDelegate(
-          onProgress: (int progress) {
-            print('WebView is loading (progress : $progress%)');
-          },
-          onPageStarted: (String url) {
-            print('Page started loading: $url');
-          },
-          onPageFinished: (String url) {
+  _controller = WebViewController()
+    ..setJavaScriptMode(JavaScriptMode.unrestricted)
+    ..addJavaScriptChannel(
+      'onBoxClick',
+      onMessageReceived: (JavaScriptMessage message) {
+        _handleJavaScriptMessage(message.message); // 메시지 처리 함수 호출
+      },
+    )
+    ..setBackgroundColor(const Color(0x00000000))
+    ..setNavigationDelegate(
+      NavigationDelegate(
+        onProgress: (int progress) {
+          print('WebView is loading (progress : $progress%)');
+          if (progress == 100) {
             setState(() {
-              isWebViewLoaded = true;
+              isWebViewLoaded = true; // 로딩이 완료되면 인디케이터를 숨깁니다.
             });
-          },
-          onWebResourceError: (WebResourceError error) {
-            print('''
-            Page resource error:
-            Code: ${error.errorCode}
-            Description: ${error.description}
-            ErrorType: ${error.errorType}
-            ''');
-          },
-        ),
-      );
+          }
+        },
+        onPageStarted: (String url) {
+          setState(() {
+            isWebViewLoaded = false; // 페이지가 다시 시작되면 로딩을 표시합니다.
+          });
+          print('Page started loading: $url');
+        },
+        onPageFinished: (String url) {
+          setState(() {
+            isWebViewLoaded = true; // 페이지 로딩이 끝나면 인디케이터를 숨깁니다.
+          });
+        },
+        onWebResourceError: (WebResourceError error) {
+          print('''
+          Page resource error:
+          Code: ${error.errorCode}
+          Description: ${error.description}
+          ErrorType: ${error.errorType}
+          ''');
+        },
+      ),
+    );
 
-    _loadHtml();
-  }
+  // 초기화 지연을 추가하여 카메라 초기화 이후에 웹뷰 로딩을 시작하도록 합니다.
+  Future.delayed(Duration(milliseconds: 200), _loadHtml);
+}
 
   // JavaScript 메시지 처리 함수
   void _handleJavaScriptMessage(String message) async {
     switch (message) {
       case '판매중 박스 1 클릭됨':
-        print('판매중 첫 번째 박스가 클릭되었습니다.');
-        break; // break 추가
       case '판매중 박스 2 클릭됨':
-        print('판매중 두 번째 박스가 클릭되었습니다.');
-        break; // break 추가
+        print('판매중 박스가 클릭되었습니다.');
+        _navigateToUserProfileScreen(context, isSaleTab: true); // 판매 상품 화면으로 전환
+        break;
       case '후기 박스 1 클릭됨':
-        print('후기 첫 번째 박스가 클릭되었습니다.');
-        break; // break 추가
       case '후기 박스 2 클릭됨':
-        print('후기 두 번째 박스가 클릭되었습니다.');
-        break; // break 추가
+        print('후기 박스가 클릭되었습니다.');
+        _navigateToUserProfileScreen(context, isSaleTab: false); // 리뷰 목록 화면으로 전환
+        break;
       default:
         print('알 수 없는 박스가 클릭되었습니다.');
     }
   }
 
-  // 웹뷰 멈추기 함수
-  void _pauseWebView() {
-    if (!isWebViewPaused) {
-      _controller.runJavaScript("document.body.style.display = 'none';"); // 웹뷰 내용 숨기기
-      setState(() {
-        isWebViewPaused = true;
-      });
-    }
-  }
-
-  // 웹뷰 다시 시작하기 함수
-  void _resumeWebView() {
-    if (isWebViewPaused) {
-      _controller.runJavaScript("document.body.style.display = 'block';"); // 웹뷰 내용 보이기
-      setState(() {
-        isWebViewPaused = false;
-      });
-    }
+  // UserProfileScreen으로 전환하는 함수
+  void _navigateToUserProfileScreen(BuildContext context, {required bool isSaleTab}) {
+    _navigateWithLoadingIndicator(
+      context,
+      (imageProvider) => UserProfileScreen(
+        backgroundImage: imageProvider,
+        initialTab: isSaleTab ? 0 : 1, // 탭 인덱스를 전달 (0: 판매 상품, 1: 리뷰 목록)
+      ),
+    );
   }
 
   // 화면 전환 시 로딩 인디케이터 표시 및 상태 관리 함수
@@ -174,11 +173,17 @@ class _MarketScreenState extends State<MarketScreen> {
         context, (imageProvider) => TransactionHistoryScreen(backgroundImage: imageProvider));
   }
 
-  // HTML 로드 함수
-  void _loadHtml() async {
-    await _controller.loadFlutterAsset('assets/babylon_view.html');
-  }
 
+// HTML 로드 함수
+void _loadHtml() async {
+  // 웹뷰 로딩을 더 최적화하고 비동기 처리합니다.
+  try {
+    await _controller.loadFlutterAsset('assets/babylon_view.html');
+    print("WebView HTML loaded.");
+  } catch (e) {
+    print("Failed to load HTML: $e");
+  }
+}
   // 카메라 프리뷰를 화면에 맞추는 위젯 수정
   Widget _buildCameraPreview() {
     final size = MediaQuery.of(context).size; // 화면 크기
@@ -245,6 +250,24 @@ class _MarketScreenState extends State<MarketScreen> {
   void _resumeCameraPreview() {
     if (_cameraController != null && _cameraController!.value.isInitialized) {
       _cameraController!.resumePreview();
+    }
+  }
+
+  void _pauseWebView() {
+    if (!isWebViewPaused) {
+      _controller.runJavaScript("document.body.style.display = 'none';"); // 웹뷰 내용 숨기기
+      setState(() {
+        isWebViewPaused = true;
+      });
+    }
+  }
+
+  void _resumeWebView() {
+    if (isWebViewPaused) {
+      _controller.runJavaScript("document.body.style.display = 'block';"); // 웹뷰 내용 보이기
+      setState(() {
+        isWebViewPaused = false;
+      });
     }
   }
 
