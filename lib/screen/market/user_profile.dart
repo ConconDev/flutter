@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'user_profile_review.dart'; // Import the new UserProfileReview file
 
 class UserProfileScreen extends StatefulWidget {
   final ImageProvider backgroundImage;
@@ -399,6 +400,23 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           ],
         ),
         child: ListTile(
+          onTap: () {
+            // Navigate to UserProfileReview with the relevant data
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => UserProfileReview(
+                  image: item['image'],
+                  brand: item['brand'],
+                  productName: item['productName'],
+                  date: item['date'],
+                  rating: item['rating'],
+                  reviewText: item['reviewText'],
+                  backgroundImage: widget.backgroundImage, // Pass the background image
+                ),
+              ),
+            );
+          },
           title: Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: Row(

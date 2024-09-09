@@ -286,7 +286,7 @@ void _loadHtml() async {
               constraints: BoxConstraints(),
               icon: Icon(
                 Icons.refresh,
-                color: Colors.black54.withOpacity(0.7),
+                color: Colors.orange,
                 size: 28,
               ),
               onPressed: () {
@@ -299,14 +299,14 @@ void _loadHtml() async {
           IconButton(
             icon: Icon(
               Icons.search,
-              color: Colors.black54.withOpacity(0.7),
+              color: Colors.orange,
             ),
             onPressed: () {},
           ),
           IconButton(
             icon: Icon(
               Icons.add_business_outlined,
-              color: Colors.black54.withOpacity(0.7),
+              color: Colors.orange,
             ),
             onPressed: () {
               _navigateToSaleScreen(context);
@@ -315,7 +315,7 @@ void _loadHtml() async {
           IconButton(
             icon: Icon(
               Icons.format_list_numbered,
-              color: Colors.black54.withOpacity(0.7),
+              color: Colors.orange,
             ),
             onPressed: () {
               _navigateToTransactionHistoryScreen(context); // TransactionHistoryScreen으로 전환
