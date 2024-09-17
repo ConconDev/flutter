@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dart:io'; // File 클래스 사용을 위해 추가
+// File 클래스 사용을 위해 추가
 import 'package:intl/intl.dart';
 
 import 'market_sale_detail.dart'; // 날짜 포맷을 위한 패키지 추가
@@ -7,7 +7,7 @@ import 'market_sale_detail.dart'; // 날짜 포맷을 위한 패키지 추가
 class MarketSaleScreen extends StatefulWidget {
   final ImageProvider? backgroundImage; // nullable 처리
 
-  const MarketSaleScreen({Key? key, required this.backgroundImage}) : super(key: key);
+  const MarketSaleScreen({super.key, required this.backgroundImage});
 
   @override
   _MarketSaleScreenState createState() => _MarketSaleScreenState();

@@ -2,6 +2,8 @@ import 'package:concon/screen/coupon/my_coupon_list.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_config/flutter_config.dart';
 
+import 'screen/on_boarding/sign_in.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); 
   await FlutterConfig.loadEnvVariables();
@@ -13,6 +15,6 @@ void main() async {
             selectionHandleColor: Color(0xFFFF9900),
           ),
         ),
-    home: MyCouponList(),
+    home: SignInPage(),
   ));
 }

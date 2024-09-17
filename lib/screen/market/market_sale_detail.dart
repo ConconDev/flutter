@@ -1,4 +1,4 @@
-import 'dart:ui'; // For ImageFilter
+// For ImageFilter
 import 'package:flutter/material.dart';
 
 import '../popup_widget.dart'; // Number formatting
@@ -12,14 +12,14 @@ class MarketSaleDetailScreen extends StatefulWidget {
   final String price;
 
   const MarketSaleDetailScreen({
-    Key? key,
+    super.key,
     required this.backgroundImage,
     required this.image,
     required this.brand,
     required this.productName,
     required this.expiryDate,
     required this.price,
-  }) : super(key: key);
+  });
 
   @override
   _MarketSaleDetailScreenState createState() => _MarketSaleDetailScreenState();

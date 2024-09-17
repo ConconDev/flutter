@@ -1,7 +1,9 @@
-import 'package:concon/screen/on_boarding/sign_up.dart';
 import 'package:flutter/material.dart';
+import 'package:concon/api_service.dart';
+import '../coupon/my_coupon_list.dart';
 import '../popup_widget.dart';
 import '../textfield_widget.dart';
+import 'sign_up.dart';
 
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
@@ -14,6 +16,8 @@ class _SignInPageState extends State<SignInPage> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  final ApiService apiService = ApiService();
+
   bool isChecked = false;
   bool _isPasswordVisible = false;
 
@@ -44,6 +48,23 @@ class _SignInPageState extends State<SignInPage> {
       return '비밀번호는 최소 8자, 하나 이상의 문자 및 숫자를 포함해야 합니다.';
     }
     return null;
+  }
+
+  Future<void> _login() async {
+    if (_formKey.currentState!.validate()) {
+      final result =
+          await apiService.login(emailController.text, passwordController.text);
+
+      if (result.containsKey('error')) {
+        _showPopup(result['error'], false);
+      } else {
+        _showPopup('로그인에 성공했습니다!', false);
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => MyCouponList()),
+        );
+      }
+    }
   }
 
   @override
@@ -142,19 +163,7 @@ class _SignInPageState extends State<SignInPage> {
                             ),
                             SizedBox(height: 20),
                             ElevatedButton(
-                              onPressed: () {
-                                if (_validateEmail(emailController.text) !=
-                                        null ||
-                                    _validatePassword(
-                                            passwordController.text) !=
-                                        null) {
-                                  _showPopup('로그인에 실패했습니다\n가입 여부 및 이메일, 비밀번호를\n다시 한 번 확인해주세요', false);
-                                } else {
-                                  _showPopup(
-                                      '${emailController.text} 계정으로\n로그인에 성공했습니다',
-                                      true);
-                                }
-                              },
+                              onPressed: _login,
                               style: ElevatedButton.styleFrom(
                                 foregroundColor: Colors.white,
                                 backgroundColor: Color(0xFFFF9900),
@@ -280,7 +289,8 @@ class _SignInPageState extends State<SignInPage> {
                           ),
                         ),
                       ),
-                    ), SizedBox(height: 60,)
+                    ),
+                    SizedBox(height: 60),
                   ],
                 ),
               ),
@@ -292,42 +302,43 @@ class _SignInPageState extends State<SignInPage> {
   }
 
   Widget buildSocialSignInOptions() {
-  return Row(
-    mainAxisAlignment: MainAxisAlignment.center,
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      IconButton(
-        icon: Image.asset('assets/icon/kakao_icon.png'),
-        iconSize: 45,
-        onPressed: () {
-          print('Kakao Button');
-          // 카카오 로그인
-        },
-        constraints: BoxConstraints(),
-        padding: EdgeInsets.zero,
-      ),
-      SizedBox(width: 25),
-      IconButton(
-        icon: Image.asset('assets/icon/naver_icon.png'),
-        iconSize: 45,
-        onPressed: () {
-          print('Naver Button');
-          // 네이버 로그인
-        },constraints: BoxConstraints(),
-        padding: EdgeInsets.zero,
-      ),
-      SizedBox(width: 25),
-      IconButton(
-        icon: Image.asset('assets/icon/google_icon.png'),
-        iconSize: 45,
-        onPressed: () {
-          print('Google Button');
-          // 구글 로그인
-        },constraints: BoxConstraints(),
-        padding: EdgeInsets.zero,
-      ),
-    ],
-  );
-}
-
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          icon: Image.asset('assets/icon/kakao_icon.png'),
+          iconSize: 45,
+          onPressed: () {
+            print('Kakao Button');
+            // 카카오 로그인
+          },
+          constraints: BoxConstraints(),
+          padding: EdgeInsets.zero,
+        ),
+        SizedBox(width: 25),
+        IconButton(
+          icon: Image.asset('assets/icon/naver_icon.png'),
+          iconSize: 45,
+          onPressed: () {
+            print('Naver Button');
+            // 네이버 로그인
+          },
+          constraints: BoxConstraints(),
+          padding: EdgeInsets.zero,
+        ),
+        SizedBox(width: 25),
+        IconButton(
+          icon: Image.asset('assets/icon/google_icon.png'),
+          iconSize: 45,
+          onPressed: () {
+            print('Google Button');
+            // 구글 로그인
+          },
+          constraints: BoxConstraints(),
+          padding: EdgeInsets.zero,
+        ),
+      ],
+    );
+  }
 }

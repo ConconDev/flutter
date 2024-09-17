@@ -3,8 +3,7 @@ import 'package:flutter/material.dart';
 class TransactionHistoryScreen extends StatelessWidget {
   final ImageProvider? backgroundImage;
 
-  const TransactionHistoryScreen({Key? key, required this.backgroundImage})
-      : super(key: key);
+  const TransactionHistoryScreen({super.key, required this.backgroundImage});
 
   @override
   Widget build(BuildContext context) {

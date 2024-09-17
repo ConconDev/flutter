@@ -7,10 +7,10 @@ class UserProfileScreen extends StatefulWidget {
   final int initialTab; // 초기 탭을 지정하는 매개변수 추가 (0: 판매 상품, 1: 리뷰 목록)
 
   const UserProfileScreen({
-    Key? key,
+    super.key,
     required this.backgroundImage,
     this.initialTab = 0, // 기본값으로 0 (판매 상품 탭)
-  }) : super(key: key);
+  });
 
   @override
   _UserProfileScreenState createState() => _UserProfileScreenState();

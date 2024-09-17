@@ -4,6 +4,7 @@ import 'package:camera/camera.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import '../navigation_bar.dart';
 import 'market_sale.dart';
+import 'search.dart';
 import 'transaction_history.dart';
 import 'user_profile.dart'; // user_profile.dart import 추가
 
@@ -33,50 +34,50 @@ class _MarketScreenState extends State<MarketScreen> {
 
   // 웹뷰 초기화 함수
   void _initializeWebView() {
-  _controller = WebViewController()
-    ..setJavaScriptMode(JavaScriptMode.unrestricted)
-    ..addJavaScriptChannel(
-      'onBoxClick',
-      onMessageReceived: (JavaScriptMessage message) {
-        _handleJavaScriptMessage(message.message); // 메시지 처리 함수 호출
-      },
-    )
-    ..setBackgroundColor(const Color(0x00000000))
-    ..setNavigationDelegate(
-      NavigationDelegate(
-        onProgress: (int progress) {
-          print('WebView is loading (progress : $progress%)');
-          if (progress == 100) {
+    _controller = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..addJavaScriptChannel(
+        'onBoxClick',
+        onMessageReceived: (JavaScriptMessage message) {
+          _handleJavaScriptMessage(message.message); // 메시지 처리 함수 호출
+        },
+      )
+      ..setBackgroundColor(const Color(0x00000000))
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onProgress: (int progress) {
+            print('WebView is loading (progress : $progress%)');
+            if (progress == 100) {
+              setState(() {
+                isWebViewLoaded = true; // 로딩이 완료되면 인디케이터를 숨깁니다.
+              });
+            }
+          },
+          onPageStarted: (String url) {
             setState(() {
-              isWebViewLoaded = true; // 로딩이 완료되면 인디케이터를 숨깁니다.
+              isWebViewLoaded = false; // 페이지가 다시 시작되면 로딩을 표시합니다.
             });
-          }
-        },
-        onPageStarted: (String url) {
-          setState(() {
-            isWebViewLoaded = false; // 페이지가 다시 시작되면 로딩을 표시합니다.
-          });
-          print('Page started loading: $url');
-        },
-        onPageFinished: (String url) {
-          setState(() {
-            isWebViewLoaded = true; // 페이지 로딩이 끝나면 인디케이터를 숨깁니다.
-          });
-        },
-        onWebResourceError: (WebResourceError error) {
-          print('''
+            print('Page started loading: $url');
+          },
+          onPageFinished: (String url) {
+            setState(() {
+              isWebViewLoaded = true; // 페이지 로딩이 끝나면 인디케이터를 숨깁니다.
+            });
+          },
+          onWebResourceError: (WebResourceError error) {
+            print('''
           Page resource error:
           Code: ${error.errorCode}
           Description: ${error.description}
           ErrorType: ${error.errorType}
           ''');
-        },
-      ),
-    );
+          },
+        ),
+      );
 
-  // 초기화 지연을 추가하여 카메라 초기화 이후에 웹뷰 로딩을 시작하도록 합니다.
-  Future.delayed(Duration(milliseconds: 200), _loadHtml);
-}
+    // 초기화 지연을 추가하여 카메라 초기화 이후에 웹뷰 로딩을 시작하도록 합니다.
+    Future.delayed(Duration(milliseconds: 200), _loadHtml);
+  }
 
   // JavaScript 메시지 처리 함수
   void _handleJavaScriptMessage(String message) async {
@@ -161,10 +162,12 @@ class _MarketScreenState extends State<MarketScreen> {
     }
   }
 
-  // 판매 화면 전환 함수
+  // 판매중 박스 클릭 시 화면 전환 함수
   void _navigateToSaleScreen(BuildContext context) {
     _navigateWithLoadingIndicator(
-        context, (imageProvider) => MarketSaleScreen(backgroundImage: imageProvider));
+      context,
+      (imageProvider) => MarketSaleScreen(backgroundImage: imageProvider), // MarketSaleScreen으로 전환
+    );
   }
 
   // 거래 내역 확인 화면으로 전환하는 함수
@@ -173,17 +176,17 @@ class _MarketScreenState extends State<MarketScreen> {
         context, (imageProvider) => TransactionHistoryScreen(backgroundImage: imageProvider));
   }
 
-
-// HTML 로드 함수
-void _loadHtml() async {
-  // 웹뷰 로딩을 더 최적화하고 비동기 처리합니다.
-  try {
-    await _controller.loadFlutterAsset('assets/babylon_view.html');
-    print("WebView HTML loaded.");
-  } catch (e) {
-    print("Failed to load HTML: $e");
+  // HTML 로드 함수
+  void _loadHtml() async {
+    // 웹뷰 로딩을 더 최적화하고 비동기 처리합니다.
+    try {
+      await _controller.loadFlutterAsset('assets/babylon_view.html');
+      print("WebView HTML loaded.");
+    } catch (e) {
+      print("Failed to load HTML: $e");
+    }
   }
-}
+
   // 카메라 프리뷰를 화면에 맞추는 위젯 수정
   Widget _buildCameraPreview() {
     final size = MediaQuery.of(context).size; // 화면 크기
@@ -301,7 +304,14 @@ void _loadHtml() async {
               Icons.search,
               color: Colors.orange,
             ),
-            onPressed: () {},
+            onPressed: () async {
+              _navigateWithLoadingIndicator(
+                context,
+                (imageProvider) => SearchScreen(
+                  backgroundImage: imageProvider,
+                ),
+              );
+            },
           ),
           IconButton(
             icon: Icon(

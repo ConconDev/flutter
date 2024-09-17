@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:barcode_widget/barcode_widget.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_config/flutter_config.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import '../config.dart';

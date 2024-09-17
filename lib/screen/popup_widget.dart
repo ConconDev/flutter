@@ -1,4 +1,5 @@
 import 'package:concon/screen/coupon/my_coupon_list.dart';
+import 'package:concon/screen/on_boarding/sign_in.dart';
 import 'package:flutter/material.dart';
 
 class PopupWidget extends StatelessWidget {
@@ -48,7 +49,7 @@ class PopupWidget extends StatelessWidget {
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => MyCouponList()),
+                              builder: (context) => SignInPage()),
                         );
                       }
                     },

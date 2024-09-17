@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 
 class UserProfileReview extends StatelessWidget {
@@ -11,7 +10,7 @@ class UserProfileReview extends StatelessWidget {
   final ImageProvider backgroundImage; // 배경 이미지
 
   const UserProfileReview({
-    Key? key,
+    super.key,
     required this.image,
     required this.brand,
     required this.productName,
@@ -19,7 +18,7 @@ class UserProfileReview extends StatelessWidget {
     required this.rating,
     required this.reviewText,
     required this.backgroundImage,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
