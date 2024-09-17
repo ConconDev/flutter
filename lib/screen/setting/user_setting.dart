@@ -7,6 +7,7 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import '../navigation_bar.dart';
 import '../on_boarding/sign_in.dart';
 import '../popup_widget.dart';
+import 'package:concon/api_service.dart'; // ApiService 추가
 
 class CustomSwitch extends StatelessWidget {
   final bool value;
@@ -60,6 +61,8 @@ class UserSetting extends StatefulWidget {
 }
 
 class _UserSettingState extends State<UserSetting> {
+  final ApiService apiService = ApiService(); // ApiService 인스턴스 생성
+
   File? _imageFile;
   String _nickname = 'User';
   Color _avatarColor = Colors.grey;
@@ -117,13 +120,21 @@ class _UserSettingState extends State<UserSetting> {
                 builder: (BuildContext context) {
                   return ChoicePopupWidget(
                     message: "로그아웃 시 로그인 화면으로 돌아갑니다\n로그아웃을 진행하시겠습니까?",
-                    onConfirm: () {
-                      // 로그아웃 API 연결
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => SignInPage()),
-                      );
-                    },
+                    onConfirm: () async {
+  // 로그아웃 API 연결
+  bool success = await apiService.logout();
+  if (success) {
+    Future.microtask(() {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => SignInPage()),
+      );
+    });
+  } else {
+    _showPopup('로그아웃에 실패했습니다.', false);
+  }
+},
+
                   );
                 },
               );
@@ -621,6 +632,16 @@ class _UserSettingState extends State<UserSetting> {
             )
           ],
         );
+      },
+    );
+  }
+
+  // 팝업 메시지 표시
+  void _showPopup(String message, bool success) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return PopupWidget(message: message, success: success);
       },
     );
   }

@@ -18,8 +18,34 @@ class _SignInPageState extends State<SignInPage> {
   final TextEditingController passwordController = TextEditingController();
   final ApiService apiService = ApiService();
 
-  bool isChecked = false;
+  bool isChecked = false; // 로그인 상태 유지 체크박스
   bool _isPasswordVisible = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAutoLogin();
+  }
+
+  // 자동 로그인 체크
+  Future<void> _checkAutoLogin() async {
+    if (isChecked) { // 앱을 켰을 때 체크박스 상태를 확인하여 자동 로그인 시도
+      String? email = await apiService.storage.read(key: 'savedEmail');
+      String? password = await apiService.storage.read(key: 'savedPassword');
+      
+      if (email != null && password != null) {
+        final result = await apiService.autoLogin(email, password);
+        if (result.containsKey('token')) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => MyCouponList()),
+          );
+        } else {
+          _showPopup('자동 로그인에 실패했습니다. 다시 로그인해주세요.', false);
+        }
+      }
+    }
+  }
 
   void _showPopup(String message, bool success) {
     showDialog(
@@ -52,13 +78,17 @@ class _SignInPageState extends State<SignInPage> {
 
   Future<void> _login() async {
     if (_formKey.currentState!.validate()) {
-      final result =
-          await apiService.login(emailController.text, passwordController.text);
+      final result = await apiService.login(emailController.text, passwordController.text);
 
       if (result.containsKey('error')) {
         _showPopup(result['error'], false);
       } else {
-        _showPopup('로그인에 성공했습니다!', false);
+        _showPopup('로그인에 성공했습니다!', true);
+        if (isChecked) {
+          // 로그인 상태 유지 체크 시 이메일과 비밀번호 저장
+          await apiService.storage.write(key: 'savedEmail', value: emailController.text);
+          await apiService.storage.write(key: 'savedPassword', value: passwordController.text);
+        }
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => MyCouponList()),
