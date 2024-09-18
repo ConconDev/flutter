@@ -89,10 +89,7 @@ class _SignInPageState extends State<SignInPage> {
           await apiService.storage.write(key: 'savedEmail', value: emailController.text);
           await apiService.storage.write(key: 'savedPassword', value: passwordController.text);
         }
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => MyCouponList()),
-        );
+        
       }
     }
   }

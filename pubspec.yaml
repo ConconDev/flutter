@@ -52,6 +52,8 @@ dependencies:
   url_launcher: ^6.3.0
   flutter_local_notifications: ^17.2.2
   workmanager: ^0.5.2
+  flutter_localizations:
+    sdk: flutter
 
 dev_dependencies:
   flutter_test:

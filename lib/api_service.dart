@@ -99,7 +99,11 @@ class ApiService {
         }
       } else {
         print('Error response body: $decodedBody');
-        return {'error': decodedBody.isNotEmpty ? jsonDecode(decodedBody)['message'] : 'Empty response body'};
+        return {
+          'error': decodedBody.isNotEmpty
+              ? jsonDecode(decodedBody)['message']
+              : 'Empty response body'
+        };
       }
     } catch (e) {
       print('An error occurred: $e');
@@ -138,6 +142,7 @@ class ApiService {
     } else {
       // 토큰이 유효한 경우
       String? token = await getToken();
+      print("'token': $token");
       return {'token': token};
     }
   }
@@ -145,7 +150,7 @@ class ApiService {
   // 로그아웃 API
   Future<bool> logout() async {
     final url = Uri.parse('$baseUrl/auth/logout');
-    
+
     // 저장된 토큰 가져오기
     String? token = await getToken();
     if (token == null) return false; // 토큰이 없으면 로그아웃 불가
@@ -207,5 +212,73 @@ class ApiService {
       return false;
     }
   }
+  
+// 상품명으로 itemId 및 brand 가져오기 API
+Future<Map<String, dynamic>?> fetchItemDetails(String itemName) async {
+  final token = await getToken();
+  if (token == null) {
+    return null;
+  }
+
+  final url = Uri.parse('$baseUrl/item?name=$itemName');
+
+  try {
+    final response = await http.get(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': token,
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final decodedResponse = jsonDecode(utf8.decode(response.bodyBytes));
+      return decodedResponse;
+    } else {
+      print('Failed to fetch item details: ${response.body}');
+      return null;
+    }
+  } catch (e) {
+    print('Error fetching item details: $e');
+    return null;
+  }
+}
+
+   // 쿠폰 등록 API
+  Future<bool?> registerCoupon(int itemId, String barcode, String name, String expirationDate, int price) async {
+    final url = Uri.parse('$baseUrl/coupons');
+    final token = await getToken();
+    if (token == null) {
+      return null;
+    }
+
+    String formattedDate = expirationDate.replaceAll('.', '-');
+
+    try {
+      print(formattedDate);
+      final response = await http.post(
+        url,
+        headers: {
+          'Authorization': token,
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          "itemId": itemId,
+          "barcode": barcode,
+          "name": name,
+          "price": price,
+          "expirationDate": formattedDate,
+          "imageFileName": "example_image.jpg",
+          "barcodeImage": "barcode_example.jpg",
+        }),
+      );
+
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Error registering coupon: $e');
+      return false;
+    }
+  }
+  
 
 }

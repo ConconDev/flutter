@@ -49,7 +49,7 @@ class PopupWidget extends StatelessWidget {
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => SignInPage()),
+                              builder: (context) => MyCouponList()),
                         );
                       }
                     },
@@ -155,7 +155,9 @@ class ChoicePopupWidget extends StatelessWidget {
                         ),
                       ),
                     ),
-                    SizedBox(width: 15,),
+                    SizedBox(
+                      width: 15,
+                    ),
                     Expanded(
                       child: ElevatedButton(
                         onPressed: () {
