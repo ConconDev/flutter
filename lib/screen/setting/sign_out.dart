@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
-
 import '../on_boarding/sign_in.dart';
 import '../popup_widget.dart';
+import 'package:concon/api_service.dart'; // ApiService 추가
 
 class SignOut extends StatelessWidget {
   const SignOut({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final ApiService apiService = ApiService(); // ApiService 인스턴스 생성
+
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
@@ -99,24 +101,29 @@ class SignOut extends StatelessWidget {
                   child: SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () {
+                      onPressed: () async {
                         // 탈퇴 API 연결
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return SimpleAlertPopupWidget(
-                              message: '탈퇴가 완료되었습니다\n그동안 서비스를 이용해주셔서 감사합니다',
-                              onConfirm: () {
-                                Navigator.of(context).pop();
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => SignInPage()),
-                                );
-                              },
-                            );
-                          },
-                        );
+                        bool success = await apiService.deleteUser();
+                        if (success) {
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return SimpleAlertPopupWidget(
+                                message: '탈퇴가 완료되었습니다\n그동안 서비스를 이용해주셔서 감사합니다',
+                                onConfirm: () {
+                                  Navigator.of(context).pop();
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => SignInPage()),
+                                  );
+                                },
+                              );
+                            },
+                          );
+                        } else {
+                          _showErrorPopup(context, '탈퇴에 실패했습니다. 다시 시도해주세요.');
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Color(0xFFFF8A00),
@@ -143,6 +150,16 @@ class SignOut extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  // 오류 팝업 메시지 표시
+  void _showErrorPopup(BuildContext context, String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return PopupWidget(message: message, success: false);
+      },
     );
   }
 }

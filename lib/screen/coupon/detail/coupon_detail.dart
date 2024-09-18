@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:barcode_widget/barcode_widget.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'coupon_detail_3D.dart';
 import 'coupon_detail_chat.dart';
 
@@ -35,6 +36,7 @@ class _CouponDetailState extends State<CouponDetail> {
   late List<String> _categories;
   int _currentIndex = 0;
   final List<String> _titles = ["기프티콘 상세", "3D 상세", "챗봇에게 물어보기"];
+ final Uri openChatUrl = Uri.parse('https://open.kakao.com/o/sGxNJkKg');
 
   @override
   void initState() {
@@ -75,7 +77,16 @@ class _CouponDetailState extends State<CouponDetail> {
           PopupMenuButton<String>(
             iconColor: Colors.white,
             color: Colors.white,
-            onSelected: (value) {},
+            onSelected: (value) async {
+              if (value == 'support') {
+                if (await canLaunchUrl(openChatUrl)) {
+                  await launchUrl(openChatUrl);
+                } else {
+                  throw 'Could not launch $openChatUrl';
+                }
+              }
+              // 다른 메뉴 항목 선택 시 필요한 동작 추가 가능
+            },
             itemBuilder: (BuildContext context) {
               return [
                 PopupMenuItem(

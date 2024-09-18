@@ -4,6 +4,8 @@ import 'package:concon/screen/navigation_bar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../popup_widget.dart';
 import 'detail/coupon_detail.dart';
@@ -17,6 +19,7 @@ class MyCouponList extends StatefulWidget {
 }
 
 class _MyCouponListState extends State<MyCouponList> {
+  final Uri openChatUrl = Uri.parse('https://open.kakao.com/o/sGxNJkKg');
   String dropDownValue = "유효기간순";
   String reviewSortValue = "날짜순";
 
@@ -327,7 +330,8 @@ class _MyCouponListState extends State<MyCouponList> {
                               CupertinoButton(
                                 minSize: 0,
                                 onPressed: () {
-                                  // 카카오톡 URL 공유 구현
+                                  // 깃허브 URL 공유
+                                  Share.share('https://github.com/ConconDev');
                                 },
                                 padding: EdgeInsets.zero,
                                 child: Icon(
@@ -633,8 +637,12 @@ class _MyCouponListState extends State<MyCouponList> {
                 ListTile(
                   leading: Icon(Icons.contact_support, color: Colors.orange),
                   title: Text('문의하기'),
-                  onTap: () {
-                    // 문의하기 기능 구현
+                  onTap: () async {
+                    if (await canLaunchUrl(openChatUrl)) {
+                      await launchUrl(openChatUrl);
+                    } else {
+                      throw 'Could not launch $openChatUrl';
+                    }
                     Navigator.pop(context);
                   },
                 ),
@@ -658,8 +666,12 @@ class _MyCouponListState extends State<MyCouponList> {
                 ListTile(
                   leading: Icon(Icons.contact_support, color: Colors.orange),
                   title: Text('문의하기'),
-                  onTap: () {
-                    // 문의하기 기능 구현
+                  onTap: () async {
+                    if (await canLaunchUrl(openChatUrl)) {
+                      await launchUrl(openChatUrl);
+                    } else {
+                      throw 'Could not launch $openChatUrl';
+                    }
                     Navigator.pop(context);
                   },
                 ),
@@ -1100,20 +1112,20 @@ class _MyCouponListState extends State<MyCouponList> {
                   // 사용된 기프티콘일 때
                   _showBottomSheet(context, item);
                 } else {
-                   Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => CouponDetail(
-                      image: image,
-                      barcode: '1234567890123',  // 실제 바코드 값으로 교체 필요
-                      productName: productName,
-                      brand: brand,
-                      expiryDate: date,
-                      price: price,
-                      categories: [category],
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CouponDetail(
+                        image: image,
+                        barcode: '1234567890123', // 실제 바코드 값으로 교체 필요
+                        productName: productName,
+                        brand: brand,
+                        expiryDate: date,
+                        price: price,
+                        categories: [category],
+                      ),
                     ),
-                  ),
-                );
+                  );
                 }
               },
             ),

@@ -177,4 +177,35 @@ class ApiService {
     }
   }
 
+  // 회원 탈퇴 API
+  Future<bool> deleteUser() async {
+    final url = Uri.parse('$baseUrl/users');
+
+    // 저장된 토큰 가져오기
+    String? token = await getToken();
+    if (token == null) return false; // 토큰이 없으면 탈퇴 불가
+
+    try {
+      final response = await http.delete(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        // 탈퇴 성공 시 토큰 및 모든 저장 데이터 삭제
+        await storage.deleteAll();
+        return true;
+      } else {
+        print('Delete user failed: ${response.body}');
+        return false;
+      }
+    } catch (e) {
+      print('An error occurred: $e');
+      return false;
+    }
+  }
+
 }

@@ -43,11 +43,15 @@ dependencies:
   http: ^0.13.3
   barcode_widget: ^2.0.4
   flutter_config: ^2.0.2
-  o3d: ^3.1.2
+  o3d: ^3.1.0
   webview_flutter: ^4.0.0
   ar_flutter_plugin: ^0.7.3
   camera: ^0.10.0+2
   flutter_secure_storage: ^9.2.2
+  share_plus: ^10.0.2
+  url_launcher: ^6.3.0
+  flutter_local_notifications: ^17.2.2
+  workmanager: ^0.5.2
 
 dev_dependencies:
   flutter_test:
