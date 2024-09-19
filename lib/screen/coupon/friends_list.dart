@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../../api_service.dart'; // 수정된 import 경로
 import '../popup_widget.dart';
-import 'search_friends.dart'; // 새로 추가될 파일을 임포트
+import 'search_friends.dart';
 
 class FriendsList extends StatefulWidget {
   const FriendsList({super.key});
@@ -11,33 +12,53 @@ class FriendsList extends StatefulWidget {
 }
 
 class _FriendsListState extends State<FriendsList> {
-  List<Map<String, String>> friends = [
-    {
-      'username': 'Mia',
-      'userId': '#0000023',
-      'image': 'assets/imgs/sample1.jpg'
-    },
-    {
-      'username': 'Sujin',
-      'userId': '#0000028',
-      'image': 'assets/imgs/sample2.jpg'
-    },
-    {
-      'username': 'NumberReal',
-      'userId': '#0000055',
-      'image': 'assets/imgs/sample3.jpg'
-    },
-    {
-      'username': 'its_soyunn',
-      'userId': '#0000020',
-      'image': 'assets/imgs/sample4.jpg'
-    },
-    {
-      'username': 'seeya00_',
-      'userId': '#0000002',
-      'image': 'assets/imgs/sample5.jpg'
-    },
-  ];
+  final ApiService apiService = ApiService();
+  final storage = FlutterSecureStorage();
+
+  List<Map<String, dynamic>> friends = [];
+  List<Map<String, dynamic>> sentFriendRequests = [];
+  bool hasFriendRequests = false;
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAllData(); // 모든 API 호출을 관리하는 함수
+  }
+
+    // 모든 데이터를 불러오는 함수
+  Future<void> _loadAllData() async {
+    if (!mounted) return; // mounted 상태 확인
+
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      // 친구 목록, 내가 보낸 친구 요청, 나에게 온 친구 요청을 모두 불러옴
+      final friendsList = await apiService.getFriendsList();
+      final requestsList = await apiService.getSentFriendRequests();
+      final incomingRequests = await apiService.getFriendRequests();
+
+      if (!mounted) return; // setState 전에 다시 mounted 상태 확인
+
+      setState(() {
+        friends = friendsList ?? [];
+        sentFriendRequests = requestsList ?? [];
+        hasFriendRequests = (incomingRequests != null && incomingRequests.isNotEmpty);
+        isLoading = false;
+      });
+    } catch (e) {
+      print("데이터를 불러오는 중 오류 발생: $e");
+
+      if (mounted) {
+        setState(() {
+          isLoading = false; // 에러 발생 시에도 로딩 상태 해제
+        });
+      }
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -64,20 +85,32 @@ class _FriendsListState extends State<FriendsList> {
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.search, color: Colors.white),
+            icon: Icon(
+              hasFriendRequests ? Icons.notifications : Icons.notifications_none,
+              color: Colors.white,
+            ),
             onPressed: () {
-              // 검색 화면으로 이동
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => SearchFriends(),
-                ),
-              );
+              // 친구 요청 알림 처리
             },
           ),
-          SizedBox(
-            width: 10,
-          ),
+          IconButton(
+  icon: Icon(Icons.search, color: Colors.white),
+  onPressed: () async {
+    // 검색 화면으로 이동하고, pop 이후에 데이터 새로고침
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SearchFriends(),
+      ),
+    );
+
+    // 검색 화면에서 돌아온 경우에만 새로고침
+    if (result == true) {
+      _loadAllData(); // 데이터 새로고침
+    }
+  },
+),
+          SizedBox(width: 10),
         ],
       ),
       body: Container(
@@ -97,14 +130,20 @@ class _FriendsListState extends State<FriendsList> {
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Colors.white, // 흰색 컨테이너 유지
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(10),
                     topRight: Radius.circular(10),
                   ),
                 ),
                 padding: EdgeInsets.zero,
-                child: _buildFriendsListBody(),
+                child: isLoading
+                    ? Center(
+                        child: CircularProgressIndicator(
+                          color: Colors.orange,
+                        ),
+                      )
+                    : _buildFriendsListBody(),
               ),
             ),
           ],
@@ -113,19 +152,39 @@ class _FriendsListState extends State<FriendsList> {
     );
   }
 
+  // 친구 목록과 친구 요청 목록을 표시하는 위젯
   Widget _buildFriendsListBody() {
-    return friends.isEmpty
+    return friends.isEmpty && sentFriendRequests.isEmpty
         ? _buildNoFriendsView()
-        : ListView.builder(
+        : ListView(
             padding: EdgeInsets.symmetric(vertical: 15),
-            itemCount: friends.length,
-            itemBuilder: (context, index) {
-              return _buildFriendTile(friends[index]);
-            },
+            children: [
+              ...friends.map((friend) => _buildFriendTile(friend)).toList(),
+              if (sentFriendRequests.isNotEmpty) ...[
+                SizedBox(height: 10,),
+                Center(
+                  child: Text(
+                    '--- 친구 요청 진행 목록 ---',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.orange,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 10,),
+                ...sentFriendRequests
+                    .map((request) => _buildFriendTile(request, isRequest: true))
+                    .toList(),
+              ],
+            ],
           );
   }
 
-  Widget _buildFriendTile(Map<String, String> friend) {
+
+  // 친구 목록 아이템을 그리는 위젯
+  Widget _buildFriendTile(Map<String, dynamic> friend, {bool isRequest = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
       child: Container(
@@ -134,8 +193,8 @@ class _FriendsListState extends State<FriendsList> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFFFFAF04),
-              Color(0xFFFFBF2D),
+              isRequest ? Color(0xFFFFEFCD) : Color(0xFFFFAF04),
+              isRequest ? Color(0xFFFFE099) : Color(0xFFFFBF2D),
             ],
           ),
           borderRadius: BorderRadius.circular(15.0),
@@ -143,55 +202,76 @@ class _FriendsListState extends State<FriendsList> {
         child: ListTile(
           contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 3),
           leading: CircleAvatar(
-            backgroundImage: AssetImage(friend['image']!),
+            backgroundImage: friend['profileUrl'] != null && friend['profileUrl'].isNotEmpty
+                ? NetworkImage(friend['profileUrl']) as ImageProvider
+                : AssetImage('assets/imgs/user_image_sample.png'),
             radius: 30,
           ),
           title: Text(
-            friend['username']!,
+            friend['name'] ?? 'Unknown',
             style: TextStyle(
               fontFamily: 'Inter',
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: isRequest ? Colors.orange : Colors.white,
             ),
           ),
           subtitle: Text(
-            friend['userId']!,
+            '요청번호 ${friend['friendshipId'].toString().padLeft(5, '0')}',
             style: TextStyle(
               fontFamily: 'Inter',
               fontSize: 12,
-              color: Colors.white70,
+              color: isRequest ? Colors.orange : Colors.white,
             ),
           ),
           trailing: IconButton(
             icon: Icon(
               Icons.remove_circle_outline,
-              color: Colors.white,
+              color: isRequest ? Colors.orange : Colors.white,
               size: 35,
             ),
-            onPressed: () {
-              // 팝업창에서 삭제 여부를 확인
-              showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return ChoicePopupWidget(
-                    onConfirm: () {
-                      setState(() {
-                        // 친구 삭제 로직 구현
-                      });
-                      Navigator.of(context).pop();
-                    },
-                    message: '삭제 후에는 복구가 불가능합니다\n선택하신 친구를 삭제하시겠습니까?',
-                  );
-                },
-              );
-            },
+            onPressed: isRequest
+                ? () {
+                    // 친구 요청 취소 확인 팝업
+                    showDialog(
+  context: context,
+  builder: (BuildContext context) {
+    return ChoicePopupWidget(
+      onConfirm: () async {
+        print("팝업에서 확인 버튼 눌림");  // 이 print가 호출되는지 확인
+        await _cancelFriendRequest(friend['friendshipId']);
+
+        _loadAllData(); // API 호출 후 목록 갱신
+      },
+      message: '${friend['name']}님께 신청한\n친구 요청을 취소하시겠습니까?',
+    );
+  },
+);
+                  }
+                : null,
           ),
         ),
       ),
     );
   }
 
+
+  // 친구 요청 취소 API 호출 함수
+  Future<void> _cancelFriendRequest(int friendshipId) async {
+    try {
+      final response = await apiService.cancelFriendRequest(friendshipId);
+      if (response != null && response.statusCode == 200) {
+        print("친구 요청 취소 성공");
+      } else {
+        print("친구 요청 취소 실패");
+      }
+    } catch (e) {
+      print("친구 요청 취소 중 오류 발생: $e");
+    }
+  }
+
+
+  // 친구가 없을 때 표시할 화면
   Widget _buildNoFriendsView() {
     return Center(
       child: Column(

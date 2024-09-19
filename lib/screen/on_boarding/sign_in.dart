@@ -81,7 +81,7 @@ class _SignInPageState extends State<SignInPage> {
       final result = await apiService.login(emailController.text, passwordController.text);
 
       if (result.containsKey('error')) {
-        _showPopup(result['error'], false);
+        _showPopup(result['error'] ?? '알 수 없는 오류가 발생했습니다.', false);
       } else {
         _showPopup('로그인에 성공했습니다!', true);
         if (isChecked) {

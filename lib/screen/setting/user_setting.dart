@@ -121,15 +121,14 @@ class _UserSettingState extends State<UserSetting> {
                   return ChoicePopupWidget(
                     message: "로그아웃 시 로그인 화면으로 돌아갑니다\n로그아웃을 진행하시겠습니까?",
                     onConfirm: () async {
-  // 로그아웃 API 연결
-  bool success = await apiService.logout();
+  bool success = await apiService.logout(); // 로그아웃 API 호출
+  if (!mounted) return; // 위젯이 여전히 활성 상태인지 확인
+
   if (success) {
-    Future.microtask(() {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => SignInPage()),
-      );
-    });
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => SignInPage()),
+    );
   } else {
     _showPopup('로그아웃에 실패했습니다.', false);
   }

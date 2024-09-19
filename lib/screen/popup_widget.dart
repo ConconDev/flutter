@@ -202,7 +202,7 @@ class SimpleAlertPopupWidget extends StatelessWidget {
 
   const SimpleAlertPopupWidget({
     required this.message,
-    this.onConfirm, // 선택적인 onConfirm
+    this.onConfirm,
     super.key,
   });
 

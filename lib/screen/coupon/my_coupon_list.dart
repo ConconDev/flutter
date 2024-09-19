@@ -3,10 +3,12 @@ import 'package:concon/screen/coupon/sharedRoom/shared_room.dart';
 import 'package:concon/screen/navigation_bar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../api_service.dart';
 import '../popup_widget.dart';
 import 'detail/coupon_detail.dart';
 import 'write_review.dart';
@@ -19,6 +21,8 @@ class MyCouponList extends StatefulWidget {
 }
 
 class _MyCouponListState extends State<MyCouponList> {
+  final storage = FlutterSecureStorage();
+  final ApiService apiService = ApiService();
   final Uri openChatUrl = Uri.parse('https://open.kakao.com/o/sGxNJkKg');
   String dropDownValue = "유효기간순";
   String reviewSortValue = "날짜순";
@@ -27,6 +31,10 @@ class _MyCouponListState extends State<MyCouponList> {
   bool secondState = false;
   bool thirdState = true;
   late List<bool> isSelected;
+
+  String userName = 'Unknown';
+  String userId = '00000000';
+  String profileImageUrl = 'assets/imgs/user_image_sample.png';
 
   // 내 기프티콘 데이터
   final List<Map<String, dynamic>> myCouponData = [
@@ -131,8 +139,26 @@ class _MyCouponListState extends State<MyCouponList> {
 
   @override
   void initState() {
-    isSelected = [firstState, secondState, thirdState];
     super.initState();
+    _fetchUserInfo(); // 회원 정보를 불러옴
+    isSelected = [firstState, secondState, thirdState];
+  }
+
+// 회원 정보 불러오기 함수
+  Future<void> _fetchUserInfo() async {
+    final userInfo = await apiService.getUserInfo(); // 회원 정보 API 호출
+    if (userInfo != null) {
+      setState(() {
+        userName = userInfo['username'] ?? 'Unknown User';
+        userId = userInfo['userId'].toString().padLeft(7, '0'); // 7자리로 포맷
+        profileImageUrl = userInfo['profileUrl'] != null && userInfo['profileUrl'].isNotEmpty
+            ? userInfo['profileUrl'] // 프로필 이미지 URL
+            : 'assets/imgs/user_image_sample.png'; // 기본 이미지
+      });
+
+      // userId를 안전한 저장소에 저장
+      await storage.write(key: 'userId', value: userInfo['userId'].toString());
+    }
   }
 
   @override
@@ -216,8 +242,9 @@ class _MyCouponListState extends State<MyCouponList> {
                         ),
                         CircleAvatar(
                           radius: 40,
-                          backgroundImage:
-                              AssetImage('assets/user/user_image_sample.png'),
+                          backgroundImage: profileImageUrl.startsWith('http')
+                              ? NetworkImage(profileImageUrl)
+                              : AssetImage(profileImageUrl) as ImageProvider,
                         ),
                       ],
                     ),
@@ -226,16 +253,16 @@ class _MyCouponListState extends State<MyCouponList> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "Mia",
+                          userName, // 유저 이름
                           style: TextStyle(
-                            fontSize: 20,
+                            fontSize: 19,
                             color: Colors.white,
                             fontFamily: 'Inter',
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         Text(
-                          "#0000023",
+                          '#$userId', // 유저 ID
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.white.withOpacity(0.8),

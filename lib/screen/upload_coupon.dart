@@ -47,12 +47,6 @@ class _UploadCouponState extends State<UploadCoupon> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-        ),
       ),
       body: Stack(
         children: [

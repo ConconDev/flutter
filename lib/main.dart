@@ -4,6 +4,7 @@ import 'package:flutter_config/flutter_config.dart';
 import 'package:concon/screen/on_boarding/sign_in.dart';
 import 'package:concon/api_service.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -59,6 +60,8 @@ Future<bool> checkAutoLogin(ApiService apiService) async {
     } else {
       // 토큰이 유효한 경우 그대로 로그인 유지
       print('토큰 유효');
+      String? token = await apiService.getToken();
+      print(token);
       return true;
     }
   }
