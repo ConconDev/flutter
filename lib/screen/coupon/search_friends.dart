@@ -17,12 +17,12 @@ class _SearchFriendsState extends State<SearchFriends> {
   List<Map<String, dynamic>> searchResults = [];
   String searchQuery = '';
   bool isLoading = false;
-  String? myUserId; // 내 userId 저장
+  String? myUserId;
 
   @override
   void initState() {
     super.initState();
-    _loadMyUserId(); // 내 userId 불러오기
+    _loadMyUserId();
   }
 
   // 내 userId를 불러오는 함수
@@ -86,7 +86,7 @@ class _SearchFriendsState extends State<SearchFriends> {
                 setState(() {
                   isLoading = false;
                   if (results != null) {
-                    searchResults = results; // 검색 결과 업데이트
+                    searchResults = results;
                   }
                 });
               }
@@ -174,7 +174,7 @@ class _SearchFriendsState extends State<SearchFriends> {
 
         // 내 userId와 일치하는 항목을 제외
         if (result['userId'].toString() == myUserId) {
-          return SizedBox.shrink(); // 내 userId인 경우, 항목 숨김
+          return SizedBox.shrink();
         }
 
         return Padding(
@@ -241,9 +241,7 @@ void _showFriendRequestDialog(BuildContext context, String name, int userId) {
             // 친구 요청 보내기
             bool success = await _sendFriendRequest(userId);
 
-            if (!mounted) return; // 위젯이 여전히 활성화 상태인지 확인
-
-            // 친구 요청 성공 시 검색 화면을 닫고 FriendsList로 true 반환
+            if (!mounted) return;
             if (success) {
               print('친구 요청 성공');
             } else {
@@ -272,7 +270,7 @@ Future<bool> _sendFriendRequest(int friendId) async {
   try {
     final response = await apiService.sendFriendRequest(friendId);
     if (response != null && response.statusCode == 200) {
-      Navigator.pop(context, true); // 친구 요청 성공 시 true 반환하며 pop
+      Navigator.pop(context, true);
       return true; // 요청 성공
     } else {
       return false; // 요청 실패 (이미 친구 요청 중)

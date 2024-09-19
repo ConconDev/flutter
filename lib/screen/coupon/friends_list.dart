@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import '../../api_service.dart'; // 수정된 import 경로
+import '../../api_service.dart';
 import '../popup_widget.dart';
 import 'search_friends.dart';
 
@@ -17,35 +17,35 @@ class _FriendsListState extends State<FriendsList> {
 
   List<Map<String, dynamic>> friends = [];
   List<Map<String, dynamic>> sentFriendRequests = [];
+  List<Map<String, dynamic>> friendRequests = [];
   bool hasFriendRequests = false;
   bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadAllData(); // 모든 API 호출을 관리하는 함수
+    _loadAllData();
   }
 
-    // 모든 데이터를 불러오는 함수
   Future<void> _loadAllData() async {
-    if (!mounted) return; // mounted 상태 확인
+    if (!mounted) return;
 
     setState(() {
       isLoading = true;
     });
 
     try {
-      // 친구 목록, 내가 보낸 친구 요청, 나에게 온 친구 요청을 모두 불러옴
       final friendsList = await apiService.getFriendsList();
       final requestsList = await apiService.getSentFriendRequests();
       final incomingRequests = await apiService.getFriendRequests();
 
-      if (!mounted) return; // setState 전에 다시 mounted 상태 확인
+      if (!mounted) return;
 
       setState(() {
         friends = friendsList ?? [];
         sentFriendRequests = requestsList ?? [];
-        hasFriendRequests = (incomingRequests != null && incomingRequests.isNotEmpty);
+        friendRequests = incomingRequests ?? [];
+        hasFriendRequests = friendRequests.isNotEmpty;
         isLoading = false;
       });
     } catch (e) {
@@ -53,12 +53,11 @@ class _FriendsListState extends State<FriendsList> {
 
       if (mounted) {
         setState(() {
-          isLoading = false; // 에러 발생 시에도 로딩 상태 해제
+          isLoading = false;
         });
       }
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -84,34 +83,59 @@ class _FriendsListState extends State<FriendsList> {
           },
         ),
         actions: [
-          IconButton(
-            icon: Icon(
-              hasFriendRequests ? Icons.notifications : Icons.notifications_none,
-              color: Colors.white,
+          Builder(
+            builder: (context) => IconButton(
+              icon: Icon(
+                hasFriendRequests ? Icons.notifications : Icons.notifications_none,
+                color: Colors.white,
+              ),
+              onPressed: () {
+                Scaffold.of(context).openEndDrawer();
+              },
             ),
-            onPressed: () {
-              // 친구 요청 알림 처리
-            },
           ),
           IconButton(
-  icon: Icon(Icons.search, color: Colors.white),
-  onPressed: () async {
-    // 검색 화면으로 이동하고, pop 이후에 데이터 새로고침
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => SearchFriends(),
-      ),
-    );
-
-    // 검색 화면에서 돌아온 경우에만 새로고침
-    if (result == true) {
-      _loadAllData(); // 데이터 새로고침
-    }
-  },
-),
+            icon: Icon(Icons.search, color: Colors.white),
+            onPressed: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => SearchFriends(),
+                ),
+              );
+              if (result == true) {
+                _loadAllData(); // 데이터 새로고침
+              }
+            },
+          ),
           SizedBox(width: 10),
         ],
+      ),
+      endDrawer: NotificationDrawer(
+        notifications: friendRequests.map((request) {
+          return {
+            'title': '친구 신청',
+            'message': '${request['name']}님이 친구 요청을 보냈습니다.',
+          };
+        }).toList(),
+        onAccept: (index) async {
+          final request = friendRequests[index];
+          await apiService.acceptFriendRequest(request['friendshipId']);
+          setState(() {
+            friendRequests.removeAt(index);
+          });
+          Scaffold.of(context).closeEndDrawer();
+          _loadAllData();
+        },
+        onReject: (index) async {
+          final request = friendRequests[index];
+          await apiService.denyFriendRequest(request['friendshipId']);
+          setState(() {
+            friendRequests.removeAt(index);
+          });
+          Scaffold.of(context).closeEndDrawer();
+          _loadAllData();
+        },
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -130,7 +154,7 @@ class _FriendsListState extends State<FriendsList> {
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.white, // 흰색 컨테이너 유지
+                  color: Colors.white,
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(10),
                     topRight: Radius.circular(10),
@@ -182,8 +206,6 @@ class _FriendsListState extends State<FriendsList> {
           );
   }
 
-
-  // 친구 목록 아이템을 그리는 위젯
   Widget _buildFriendTile(Map<String, dynamic> friend, {bool isRequest = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
@@ -232,21 +254,18 @@ class _FriendsListState extends State<FriendsList> {
             ),
             onPressed: isRequest
                 ? () {
-                    // 친구 요청 취소 확인 팝업
                     showDialog(
-  context: context,
-  builder: (BuildContext context) {
-    return ChoicePopupWidget(
-      onConfirm: () async {
-        print("팝업에서 확인 버튼 눌림");  // 이 print가 호출되는지 확인
-        await _cancelFriendRequest(friend['friendshipId']);
-
-        _loadAllData(); // API 호출 후 목록 갱신
-      },
-      message: '${friend['name']}님께 신청한\n친구 요청을 취소하시겠습니까?',
-    );
-  },
-);
+                      context: context,
+                      builder: (BuildContext context) {
+                        return ChoicePopupWidget(
+                          onConfirm: () async {
+                            await _cancelFriendRequest(friend['friendshipId']);
+                            _loadAllData();
+                          },
+                          message: '${friend['name']}님께 신청한\n친구 요청을 취소하시겠습니까?',
+                        );
+                      },
+                    );
                   }
                 : null,
           ),
@@ -255,8 +274,6 @@ class _FriendsListState extends State<FriendsList> {
     );
   }
 
-
-  // 친구 요청 취소 API 호출 함수
   Future<void> _cancelFriendRequest(int friendshipId) async {
     try {
       final response = await apiService.cancelFriendRequest(friendshipId);
@@ -270,8 +287,6 @@ class _FriendsListState extends State<FriendsList> {
     }
   }
 
-
-  // 친구가 없을 때 표시할 화면
   Widget _buildNoFriendsView() {
     return Center(
       child: Column(
@@ -301,6 +316,173 @@ class _FriendsListState extends State<FriendsList> {
             ),
             textAlign: TextAlign.center,
           ),
+        ],
+      ),
+    );
+  }
+}
+
+
+class NotificationDrawer extends StatelessWidget {
+  final List<Map<String, String>> notifications;
+  final Function(int) onAccept;
+  final Function(int) onReject;
+
+  const NotificationDrawer({
+    Key? key,
+    required this.notifications,
+    required this.onAccept,
+    required this.onReject,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Drawer(
+      width: MediaQuery.of(context).size.width * 0.85,
+      backgroundColor: Colors.white,
+      child: Column(
+        children: [
+          SizedBox(height: 30),
+          Container(
+            alignment: Alignment.center,
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: Text(
+              '알림',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w800,
+                fontSize: 16,
+                color: Color(0xff404040),
+              ),
+            ),
+          ),
+          Divider(
+            color: Color(0xffd2d2d2),
+            thickness: 1,
+            indent: 40,
+            endIndent: 40,
+          ),
+          notifications.isEmpty
+              ? Expanded(
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.notifications_off, size: 100, color: Colors.grey),
+                        SizedBox(height: 16),
+                        Text(
+                          '알림 메시지가 없습니다',
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontWeight: FontWeight.w400,
+                            fontSize: 15,
+                            color: Color(0xff797979),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              : Expanded(
+                  child: ListView.builder(
+                    padding: EdgeInsets.zero,
+                    itemCount: notifications.length,
+                    itemBuilder: (context, index) {
+                      var notification = notifications[index];
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 8, horizontal: 40),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              notification['title']!,
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontWeight: FontWeight.w400,
+                                fontSize: 13,
+                                color: Color(0xffa0a0a0),
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              notification['message']!,
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontWeight: FontWeight.w400,
+                                fontSize: 13,
+                                color: Color(0xff5a5a5a),
+                              ),
+                            ),
+                            SizedBox(
+                              height: 10,
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Expanded(
+                                  child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                        ),
+                                        foregroundColor: Colors.grey,
+                                        backgroundColor: Colors.white,
+                                        side: BorderSide(
+                                            color: Color(0xff5a5a5a)),
+                                        minimumSize: Size(0, 33)),
+                                    onPressed: () => onReject(index),
+                                    child: Text(
+                                      '거절',
+                                      style: TextStyle(
+                                        fontFamily: 'Inter',
+                                        fontWeight: FontWeight.w400,
+                                        fontSize: 13,
+                                        color: Color(0xff5a5a5a),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(width: 10),
+                                Expanded(
+                                  child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      foregroundColor: Colors.grey,
+                                      backgroundColor: Colors.white,
+                                      side: BorderSide(color: Color(0xff5a5a5a)),
+                                      minimumSize: Size(0, 33),
+                                    ),
+                                    onPressed: () => onAccept(index),
+                                    child: Text(
+                                      '승인',
+                                      style: TextStyle(
+                                        fontFamily: 'Inter',
+                                        fontWeight: FontWeight.w400,
+                                        fontSize: 13,
+                                        color: Color(0xff5a5a5a),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(
+                              height: 10,
+                            ),
+                            Divider(
+                              color: Color(0xffd2d2d2),
+                              thickness: 1,
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
         ],
       ),
     );

@@ -487,6 +487,63 @@ Future<http.Response?> cancelFriendRequest(int friendshipId) async {
     return null;
   }
 
+ // 친구 요청 승인 API
+Future<http.Response?> acceptFriendRequest(int friendshipId) async {
+  final token = await getToken();
+  if (token == null) return null;
+
+  final url = Uri.parse('$baseUrl/friend/accept/$friendshipId');
+
+  try {
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': token,
+      },
+    );
+    if (response.statusCode == 200) {
+      print("친구 요청 승인 성공");
+      return response;
+    } else {
+      print("친구 요청 승인 실패: ${response.body}");
+      return response;
+    }
+  } catch (e) {
+    print("Error accepting friend request: $e");
+    return null;
+  }
+}
+
+// 친구 요청 거절 API
+Future<http.Response?> denyFriendRequest(int friendshipId) async {
+  final token = await getToken();
+  if (token == null) return null;
+
+  final url = Uri.parse('$baseUrl/friend/deny/$friendshipId');
+
+  try {
+    final response = await http.put(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': token,
+      },
+    );
+    if (response.statusCode == 200) {
+      print("친구 요청 거절 성공");
+      return response;
+    } else {
+      print("친구 요청 거절 실패: ${response.body}");
+      return response;
+    }
+  } catch (e) {
+    print("Error denying friend request: $e");
+    return null;
+  }
+}
+
+
 // 내 정보 조회 API
   Future<Map<String, dynamic>?> getUserInfo() async {
     final token = await getToken();

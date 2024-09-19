@@ -7,7 +7,7 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import '../navigation_bar.dart';
 import '../on_boarding/sign_in.dart';
 import '../popup_widget.dart';
-import 'package:concon/api_service.dart'; // ApiService 추가
+import 'package:concon/api_service.dart';
 
 class CustomSwitch extends StatelessWidget {
   final bool value;
@@ -61,7 +61,7 @@ class UserSetting extends StatefulWidget {
 }
 
 class _UserSettingState extends State<UserSetting> {
-  final ApiService apiService = ApiService(); // ApiService 인스턴스 생성
+  final ApiService apiService = ApiService();
 
   File? _imageFile;
   String _nickname = 'User';
@@ -121,8 +121,8 @@ class _UserSettingState extends State<UserSetting> {
                   return ChoicePopupWidget(
                     message: "로그아웃 시 로그인 화면으로 돌아갑니다\n로그아웃을 진행하시겠습니까?",
                     onConfirm: () async {
-  bool success = await apiService.logout(); // 로그아웃 API 호출
-  if (!mounted) return; // 위젯이 여전히 활성 상태인지 확인
+  bool success = await apiService.logout();
+  if (!mounted) return;
 
   if (success) {
     Navigator.pushReplacement(
@@ -514,7 +514,7 @@ class _UserSettingState extends State<UserSetting> {
               title,
               style: TextStyle(
                 fontFamily: 'Inter',
-                fontWeight: FontWeight.normal, // regular
+                fontWeight: FontWeight.normal,
                 fontSize: 16,
                 color: Color(0xFF484848),
               ),
