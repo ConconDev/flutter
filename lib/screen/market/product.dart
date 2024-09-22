@@ -8,10 +8,10 @@ class ProductDetailScreen extends StatefulWidget {
   final Map<String, dynamic> product; // 제품 정보
 
   const ProductDetailScreen({
-    Key? key,
+    super.key,
     required this.backgroundImage,
     required this.product,
-  }) : super(key: key);
+  });
 
   @override
   _ProductDetailScreenState createState() => _ProductDetailScreenState();

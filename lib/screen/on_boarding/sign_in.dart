@@ -21,30 +21,22 @@ class _SignInPageState extends State<SignInPage> {
   bool isChecked = false; // 로그인 상태 유지 체크박스
   bool _isPasswordVisible = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _checkAutoLogin();
-  }
+  // 유효성 검사를 먼저 처리
+  bool _validateInputs() {
+    final email = emailController.text;
+    final password = passwordController.text;
+    final emailRegExp = RegExp(r'^[^@]+@[^@]+\.[^@]+');
+    final passwordRegExp = RegExp(r'^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$');
 
-  // 자동 로그인 체크
-  Future<void> _checkAutoLogin() async {
-    if (isChecked) { // 앱을 켰을 때 체크박스 상태를 확인하여 자동 로그인 시도
-      String? email = await apiService.storage.read(key: 'savedEmail');
-      String? password = await apiService.storage.read(key: 'savedPassword');
-      
-      if (email != null && password != null) {
-        final result = await apiService.autoLogin(email, password);
-        if (result.containsKey('token')) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => MyCouponList()),
-          );
-        } else {
-          _showPopup('자동 로그인에 실패했습니다. 다시 로그인해주세요.', false);
-        }
-      }
+    // 이메일 또는 비밀번호가 유효하지 않으면 팝업을 띄움
+    if (!emailRegExp.hasMatch(email) || !passwordRegExp.hasMatch(password)) {
+      _showPopup(
+        '이메일과 비밀번호 양식을 다시 확인해주세요\n비밀번호는 최소 8자, 하나 이상의\n문자 및 숫자를 포함해야 합니다',
+        false,
+      );
+      return false;
     }
+    return true;
   }
 
   void _showPopup(String message, bool success) {
@@ -56,43 +48,38 @@ class _SignInPageState extends State<SignInPage> {
     );
   }
 
-  String? _validateEmail(String? value) {
-    final emailRegExp = RegExp(r'^[^@]+@[^@]+\.[^@]+');
-    if (value == null || value.isEmpty) {
-      return '이메일을 입력해주세요.';
-    } else if (!emailRegExp.hasMatch(value)) {
-      return '유효한 이메일을 입력해주세요.';
-    }
-    return null;
-  }
+  // 로그인 시도
+Future<void> _login() async {
+  // 유효성 검사 실패 시 로그인 API 호출을 막음
+  if (!_validateInputs()) return;
 
-  String? _validatePassword(String? value) {
-    final passwordRegExp = RegExp(r'^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$');
-    if (value == null || value.isEmpty) {
-      return '비밀번호를 입력해주세요.';
-    } else if (!passwordRegExp.hasMatch(value)) {
-      return '비밀번호는 최소 8자, 하나 이상의 문자 및 숫자를 포함해야 합니다.';
-    }
-    return null;
-  }
+  final result = await apiService.login(emailController.text, passwordController.text);
 
-  Future<void> _login() async {
-    if (_formKey.currentState!.validate()) {
-      final result = await apiService.login(emailController.text, passwordController.text);
+  if (result.containsKey('error')) {
+    final error = result['error'];
+    print("Error: $error"); // 디버깅 추가
 
-      if (result.containsKey('error')) {
-        _showPopup(result['error'] ?? '알 수 없는 오류가 발생했습니다.', false);
-      } else {
-        _showPopup('로그인에 성공했습니다!', true);
-        if (isChecked) {
-          // 로그인 상태 유지 체크 시 이메일과 비밀번호 저장
-          await apiService.storage.write(key: 'savedEmail', value: emailController.text);
-          await apiService.storage.write(key: 'savedPassword', value: passwordController.text);
-        }
-        
-      }
+    if (error != null && error == 'Bad credentials') {
+      // 'Bad credentials' 에러일 경우 팝업 표시
+      _showPopup('이메일과 비밀번호가 틀렸습니다\n다시 확인해주세요.', false);
+    } else {
+      _showPopup(error ?? '알 수 없는 오류가 발생했습니다.', false);
     }
+  } else if (result.containsKey('token')) {
+    _showPopup('로그인에 성공했습니다!', false); // 성공 시 팝업
+    if (isChecked) {
+      // 로그인 상태 유지 체크 시 이메일과 비밀번호 저장
+      await apiService.storage.write(key: 'savedEmail', value: emailController.text);
+      await apiService.storage.write(key: 'savedPassword', value: passwordController.text);
+    }
+    // 로그인 성공 후 다른 페이지로 이동
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => MyCouponList()),
+    );
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -173,7 +160,6 @@ class _SignInPageState extends State<SignInPage> {
                               hintText: '이메일',
                               isPassword: false,
                               isPasswordVisible: false,
-                              validator: _validateEmail,
                             ),
                             SizedBox(height: 20),
                             SignTextField(
@@ -186,7 +172,6 @@ class _SignInPageState extends State<SignInPage> {
                                   _isPasswordVisible = !_isPasswordVisible;
                                 });
                               },
-                              validator: _validatePassword,
                             ),
                             SizedBox(height: 20),
                             ElevatedButton(
@@ -339,6 +324,7 @@ class _SignInPageState extends State<SignInPage> {
           onPressed: () {
             print('Kakao Button');
             // 카카오 로그인
+            _showPopup('현재 간편 회원가입이 지원되지 않습니다\n이메일로 진행해 주세요', false);
           },
           constraints: BoxConstraints(),
           padding: EdgeInsets.zero,
@@ -350,6 +336,7 @@ class _SignInPageState extends State<SignInPage> {
           onPressed: () {
             print('Naver Button');
             // 네이버 로그인
+            _showPopup('현재 간편 회원가입이 지원되지 않습니다\n이메일로 진행해 주세요', false);
           },
           constraints: BoxConstraints(),
           padding: EdgeInsets.zero,
@@ -361,6 +348,7 @@ class _SignInPageState extends State<SignInPage> {
           onPressed: () {
             print('Google Button');
             // 구글 로그인
+            _showPopup('현재 간편 회원가입이 지원되지 않습니다\n이메일로 진행해 주세요', false);
           },
           constraints: BoxConstraints(),
           padding: EdgeInsets.zero,

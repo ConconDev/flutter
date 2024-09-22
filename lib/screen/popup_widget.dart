@@ -1,5 +1,3 @@
-import 'package:concon/screen/coupon/my_coupon_list.dart';
-import 'package:concon/screen/on_boarding/sign_in.dart';
 import 'package:flutter/material.dart';
 
 class PopupWidget extends StatelessWidget {
@@ -45,13 +43,6 @@ class PopupWidget extends StatelessWidget {
                   child: ElevatedButton(
                     onPressed: () {
                       Navigator.of(context).pop();
-                      if (success) {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => MyCouponList()),
-                        );
-                      }
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor:

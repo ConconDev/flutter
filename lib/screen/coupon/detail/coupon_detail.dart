@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:concon/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:barcode_widget/barcode_widget.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -13,7 +16,8 @@ class CouponDetail extends StatefulWidget {
   final String price;
   final List<String> categories;
 
-  const CouponDetail({super.key, 
+  const CouponDetail({
+    super.key,
     required this.image,
     required this.barcode,
     required this.productName,
@@ -34,9 +38,14 @@ class _CouponDetailState extends State<CouponDetail> {
   late TextEditingController _brandController;
   late TextEditingController _priceController;
   late List<String> _categories;
+  String? generatedPrompt; // 프롬프트를 저장할 상태 변수
   int _currentIndex = 0;
-  final List<String> _titles = ["기프티콘 상세", "3D 상세", "챗봇에게 물어보기"];
- final Uri openChatUrl = Uri.parse('https://open.kakao.com/o/sGxNJkKg');
+  final List<String> _titles = [
+    "기프티콘 상세",
+    "챗봇에게 물어보기","3D 상세",
+  ];
+  final Uri openChatUrl = Uri.parse('https://open.kakao.com/o/sGxNJkKg');
+  final ApiService apiService = ApiService();
 
   @override
   void initState() {
@@ -48,6 +57,30 @@ class _CouponDetailState extends State<CouponDetail> {
     _priceController = TextEditingController(text: widget.price);
     _categories = List.from(widget.categories);
   }
+
+// Future<void> _generate3DPrompt() async {
+//   try {
+//     // 이미지 경로 설정
+//     String imagePath = widget.image;
+
+//     // 응답을 기다리는 시간을 30초로 설정
+//     String prompt = await apiService.generatePrompt(imagePath).timeout(Duration(seconds: 30), onTimeout: () {
+//       throw Exception("Request timed out after 30 seconds");
+//     });
+
+//     // 프롬프트 상태 업데이트
+//     setState(() {
+//       generatedPrompt = prompt;
+//     });
+
+//     print("Generated 3D Prompt: $prompt");
+//   } catch (e) {
+//     print('Error generating prompt: $e');
+//     setState(() {
+//       generatedPrompt = 'Error: Unable to generate prompt. Please try again later.';
+//     });
+//   }
+// }
 
   @override
   Widget build(BuildContext context) {
@@ -128,12 +161,18 @@ class _CouponDetailState extends State<CouponDetail> {
         onPageChanged: (index) {
           setState(() {
             _currentIndex = index;
+            if (_currentIndex == 1 && generatedPrompt == null) {
+              _generateSearchAndPrompt(); // 검색 및 프롬프트 생성 함수 호출
+            }
           });
         },
         children: [
           _buildDetailPage(),
-          CouponDetail3D(), // 3D 페이지
-          CouponDetailChat(), // 챗봇 페이지
+          CouponDetailChat(productName: widget.productName, brand: widget.brand,),
+          // generatedPrompt가 null이 아닐 때만 3D 페이지로 전달
+          generatedPrompt != null
+              ? CouponDetail3D(generatedPrompt: generatedPrompt!)
+              : Center(child: CircularProgressIndicator()), // 프롬프트가 없으면 로딩 표시
         ],
       ),
     );
@@ -463,6 +502,43 @@ class _CouponDetailState extends State<CouponDetail> {
       setState(() {
         _expiryDateController.text =
             "${picked.year}.${picked.month.toString().padLeft(2, '0')}.${picked.day.toString().padLeft(2, '0')}";
+      });
+    }
+  }
+
+  Future<void> _generateSearchAndPrompt() async {
+    try {
+      // 1. 상품명과 브랜드명으로 검색
+      String query = "${widget.brand} ${widget.productName}";
+      String searchResult = await apiService.searchGoogleCustom(query);
+
+      // 2. Luma AI 프롬프트 생성
+      String prompt = await apiService.generateLumaAIPrompt(searchResult);
+      print('Prompt generated successfully: $prompt');
+
+      // 3. 이미지 파일 로드
+      File imageFile = await apiService.getImageFileFromAssets(widget.image);
+      print('Image file loaded successfully: ${imageFile.path}');
+
+      // 4. Luma AI에 프롬프트와 이미지 전송 후 영상 URL 받기
+      String videoUrl = await apiService.sendPromptAndImageToLumaAI(prompt);
+      print('Video URL generated: $videoUrl');
+
+      setState(() {
+        generatedPrompt = prompt;
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CouponDetail3D(
+                generatedPrompt: prompt, generatedVideoUrl: videoUrl),
+          ),
+        );
+      });
+    } catch (e) {
+      print('Error generating prompt or video: $e');
+      setState(() {
+        generatedPrompt =
+            'Error: Unable to generate prompt. Please try again later.';
       });
     }
   }

@@ -444,7 +444,7 @@ class _UploadCouponState extends State<UploadCoupon> {
                 context: context,
                 builder: (context) {
                   return ChoicePopupWidget(
-                    message: '${brand}의 ${productName} 쿠폰을 등록하시겠습니까?',
+                    message: '$brand의 $productName 쿠폰을 등록하시겠습니까?',
                     onConfirm: () async {
                       // 쿠폰 등록 API 호출
                       bool? success = await apiService.registerCoupon(

@@ -21,49 +21,61 @@ class _SignUpPageState extends State<SignUpPage> {
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
 
-  void _showPopup(String message, bool success) {
+  void _showPopup(String message) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return PopupWidget(message: message, success: success);
+        return SimpleAlertPopupWidget(message: message);  // 팝업으로 오류 메시지를 띄움
       },
     );
   }
 
-  String? _validateEmail(String? value) {
+  // 이메일 유효성 검사
+  bool _validateEmail() {
     final emailRegExp = RegExp(r'^[^@]+@[^@]+\.[^@]+');
-    if (value == null || value.isEmpty) {
-      return '이메일을 입력해주세요.';
-    } else if (!emailRegExp.hasMatch(value)) {
-      return '유효한 이메일을 입력해주세요.';
+    if (emailController.text.isEmpty) {
+      _showPopup('이메일을 입력해주세요.');
+      return false;
+    } else if (!emailRegExp.hasMatch(emailController.text)) {
+      _showPopup('유효한 이메일을 입력해주세요.');
+      return false;
     }
-    return null;
+    return true;
   }
 
-  String? _validatePassword(String? value) {
+  // 비밀번호 유효성 검사
+  bool _validatePassword() {
     final passwordRegExp = RegExp(r'^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$');
-    if (value == null || value.isEmpty) {
-      return '비밀번호를 입력해주세요.';
-    } else if (!passwordRegExp.hasMatch(value)) {
-      return '비밀번호는 최소 8자, 하나 이상의 문자 및 숫자를 포함해야 합니다.';
+    if (passwordController.text.isEmpty) {
+      _showPopup('비밀번호를 입력해주세요.');
+      return false;
+    } else if (!passwordRegExp.hasMatch(passwordController.text)) {
+      _showPopup('비밀번호는 최소 8자, 하나 이상의\n문자 및 숫자를 포함해야 합니다.');
+      return false;
+    } else if (passwordController.text != confirmPasswordController.text) {
+      _showPopup('비밀번호가 일치하지 않습니다.');
+      return false;
     }
-    return null;
+    return true;
   }
 
   Future<void> _signUp() async {
-    if (_formKey.currentState!.validate()) {
-      if (passwordController.text != confirmPasswordController.text) {
-        _showPopup('비밀번호가 일치하지 않습니다.', false);
-        return;
-      }
+    // 유효성 검사 실패 시 API 호출 막음
+    if (!_validateEmail() || !_validatePassword()) return;
 
-      final result = await apiService.signUp(emailController.text, passwordController.text);
+    // API 호출
+    final result = await apiService.signUp(emailController.text, passwordController.text);
 
-      if (result.containsKey('error')) {
-        _showPopup(result['error'], false);
-      } else {
-        _showPopup('회원가입이 완료되었습니다!', true);
-      }
+    if (result.containsKey('error')) {
+      _showPopup(result['error']);
+    } else {
+      _showPopup('회원가입이 완료되었습니다!');
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SignInPage(),
+        ),
+      );
     }
   }
 
@@ -145,7 +157,6 @@ class _SignUpPageState extends State<SignUpPage> {
                               hintText: '이메일',
                               isPassword: false,
                               isPasswordVisible: false,
-                              validator: _validateEmail,
                             ),
                             SizedBox(height: 20),
                             SignTextField(
@@ -158,7 +169,6 @@ class _SignUpPageState extends State<SignUpPage> {
                                   _isPasswordVisible = !_isPasswordVisible;
                                 });
                               },
-                              validator: _validatePassword,
                             ),
                             SizedBox(height: 20),
                             SignTextField(
@@ -170,12 +180,6 @@ class _SignUpPageState extends State<SignUpPage> {
                                 setState(() {
                                   _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
                                 });
-                              },
-                              validator: (value) {
-                                if (value != passwordController.text) {
-                                  return '비밀번호가 일치하지 않습니다.';
-                                }
-                                return null;
                               },
                             ),
                             SizedBox(height: 20),
@@ -215,9 +219,7 @@ class _SignUpPageState extends State<SignUpPage> {
                             color: Color(0xFFFF9900),
                           ),
                         ),
-                        SizedBox(
-                          width: 15,
-                        ),
+                        SizedBox(width: 15),
                         Text(
                           "간편 회원가입",
                           style: TextStyle(
@@ -227,9 +229,7 @@ class _SignUpPageState extends State<SignUpPage> {
                             fontSize: 13,
                           ),
                         ),
-                        SizedBox(
-                          width: 15,
-                        ),
+                        SizedBox(width: 15),
                         SizedBox(
                           width: 80,
                           child: Divider(
@@ -296,6 +296,7 @@ class _SignUpPageState extends State<SignUpPage> {
           onPressed: () {
             print('Kakao Button');
             // 카카오 로그인
+            _showPopup('현재 간편 회원가입이 지원되지 않습니다\n이메일로 진행해 주세요');
           },
           constraints: BoxConstraints(),
           padding: EdgeInsets.zero,
@@ -307,6 +308,7 @@ class _SignUpPageState extends State<SignUpPage> {
           onPressed: () {
             print('Naver Button');
             // 네이버 로그인
+            _showPopup('현재 간편 회원가입이 지원되지 않습니다\n이메일로 진행해 주세요');
           },
           constraints: BoxConstraints(),
           padding: EdgeInsets.zero,
@@ -318,6 +320,7 @@ class _SignUpPageState extends State<SignUpPage> {
           onPressed: () {
             print('Google Button');
             // 구글 로그인
+            _showPopup('현재 간편 회원가입이 지원되지 않습니다\n이메일로 진행해 주세요');
           },
           constraints: BoxConstraints(),
           padding: EdgeInsets.zero,

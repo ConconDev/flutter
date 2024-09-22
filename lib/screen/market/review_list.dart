@@ -9,8 +9,8 @@ class ReviewListScreen extends StatefulWidget {
   final String originalPrice; // 원래 가격
   final String discountedPrice; // 할인된 가격
 
-  ReviewListScreen({
-    Key? key,
+  const ReviewListScreen({
+    super.key,
     required this.productName,
     required this.brandName,
     required this.backgroundImage,
@@ -18,7 +18,7 @@ class ReviewListScreen extends StatefulWidget {
     required this.averageRating,
     required this.originalPrice,
     required this.discountedPrice,
-  }) : super(key: key);
+  });
 
   @override
   _ReviewListScreenState createState() => _ReviewListScreenState();

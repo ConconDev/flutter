@@ -1,24 +1,80 @@
 import 'package:flutter/material.dart';
+import '../../../api_service.dart'; // ApiService 가져오기
 
 class CouponDetailChat extends StatefulWidget {
-  const CouponDetailChat({super.key});
+  final String productName;
+  final String brand;
 
+  const CouponDetailChat(
+      {super.key, required this.productName, required this.brand});
   @override
   _CouponDetailChatState createState() => _CouponDetailChatState();
 }
 
 class _CouponDetailChatState extends State<CouponDetailChat> {
+  final ScrollController _scrollController = ScrollController();
   final TextEditingController _controller = TextEditingController();
   final List<Map<String, String>> _messages = [];
+  final ApiService _apiService = ApiService(); // ApiService 인스턴스 생성
+  List<Map<String, String>> conversationHistory = []; // 대화 기록 저장
+  String? summary; // 요약된 대화 저장 변수
 
-  void _sendMessage() {
+  // 스크롤을 프레임이 렌더링된 후에 실행
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+  // 메시지 보내기 함수
+  void _sendMessage() async {
     String message = _controller.text.trim();
     if (message.isNotEmpty) {
       setState(() {
         _messages.add({'sender': 'user', 'text': message});
         _controller.clear();
-        _messages.add({'sender': 'bot', 'text': '서버 점검 중입니다.'});
       });
+
+      _scrollToBottom();
+
+      // 메시지를 대화 기록에 추가
+      conversationHistory.add({'role': 'user', 'content': message});
+
+      String gifticonInfo = "${widget.brand} ${widget.productName}";
+
+      try {
+        // ChatGPT에 메시지 전송 및 요약 포함
+        String result = await _apiService.searchGoogleCustom(gifticonInfo);
+        String botResponse =
+            await _apiService.getChatbotResponse(message, result);
+
+        setState(() {
+          _messages.add({'sender': 'bot', 'text': botResponse});
+          conversationHistory
+              .add({'role': 'assistant', 'content': botResponse});
+        });
+
+        _scrollToBottom();
+
+        // 대화가 5개 이상일 경우 요약
+        if (conversationHistory.length >= 5) {
+          summary =
+              await _apiService.summarizeConversation(conversationHistory);
+          conversationHistory.clear(); // 요약 후 기록 초기화
+        }
+      } catch (error) {
+        setState(() {
+          _messages
+              .add({'sender': 'bot', 'text': '서버 오류가 발생했습니다. 다시 시도해 주세요.'});
+        });
+        _scrollToBottom();
+      }
     }
   }
 
@@ -155,6 +211,7 @@ class _CouponDetailChatState extends State<CouponDetailChat> {
                       SizedBox(height: 20),
                       Expanded(
                         child: ListView.builder(
+                          controller: _scrollController,
                           padding: EdgeInsets.zero,
                           shrinkWrap: true,
                           itemCount: _messages.length,
@@ -201,6 +258,9 @@ class _CouponDetailChatState extends State<CouponDetailChat> {
               child: TextField(
                 controller: _controller,
                 cursorErrorColor: Colors.white,
+                onSubmitted: (value) {
+                  _sendMessage();
+                },
                 decoration: InputDecoration(
                   contentPadding: EdgeInsets.symmetric(horizontal: 8),
                   hintStyle: TextStyle(color: Colors.white.withOpacity(0.8)),

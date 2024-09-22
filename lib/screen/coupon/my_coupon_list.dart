@@ -241,11 +241,17 @@ class _MyCouponListState extends State<MyCouponList> {
                           ),
                         ),
                         CircleAvatar(
-                          radius: 40,
-                          backgroundImage: profileImageUrl.startsWith('http')
-                              ? NetworkImage(profileImageUrl)
-                              : AssetImage(profileImageUrl) as ImageProvider,
-                        ),
+  radius: 40,
+  backgroundImage: profileImageUrl.startsWith('http')
+      ? NetworkImage(profileImageUrl)
+      : AssetImage(profileImageUrl) as ImageProvider,
+  onBackgroundImageError: (exception, stackTrace) {
+    setState(() {
+      profileImageUrl = 'assets/imgs/user_image_sample.png'; // 기본 이미지로 대체
+    });
+  },
+),
+
                       ],
                     ),
                     SizedBox(width: 16),

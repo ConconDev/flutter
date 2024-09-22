@@ -27,6 +27,12 @@ class _FriendsListState extends State<FriendsList> {
     _loadAllData();
   }
 
+  @override
+void dispose() {
+  // 필요한 경우 비동기 작업 취소 처리
+  super.dispose();
+}
+
   Future<void> _loadAllData() async {
     if (!mounted) return;
 
@@ -119,23 +125,23 @@ class _FriendsListState extends State<FriendsList> {
           };
         }).toList(),
         onAccept: (index) async {
-          final request = friendRequests[index];
-          await apiService.acceptFriendRequest(request['friendshipId']);
-          setState(() {
-            friendRequests.removeAt(index);
-          });
-          Scaffold.of(context).closeEndDrawer();
-          _loadAllData();
-        },
-        onReject: (index) async {
-          final request = friendRequests[index];
-          await apiService.denyFriendRequest(request['friendshipId']);
-          setState(() {
-            friendRequests.removeAt(index);
-          });
-          Scaffold.of(context).closeEndDrawer();
-          _loadAllData();
-        },
+  final request = friendRequests[index];
+  await apiService.acceptFriendRequest(request['friendshipId']);
+  setState(() {
+    friendRequests.removeAt(index);
+  });
+  Navigator.of(context).pop(); // Drawer를 닫음
+  _loadAllData();
+},
+onReject: (index) async {
+  final request = friendRequests[index];
+  await apiService.denyFriendRequest(request['friendshipId']);
+  setState(() {
+    friendRequests.removeAt(index);
+  });
+  Navigator.of(context).pop(); // Drawer를 닫음
+  _loadAllData();
+},
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -183,7 +189,7 @@ class _FriendsListState extends State<FriendsList> {
         : ListView(
             padding: EdgeInsets.symmetric(vertical: 15),
             children: [
-              ...friends.map((friend) => _buildFriendTile(friend)).toList(),
+              ...friends.map((friend) => _buildFriendTile(friend)),
               if (sentFriendRequests.isNotEmpty) ...[
                 SizedBox(height: 10,),
                 Center(
@@ -200,92 +206,144 @@ class _FriendsListState extends State<FriendsList> {
                 SizedBox(height: 10,),
                 ...sentFriendRequests
                     .map((request) => _buildFriendTile(request, isRequest: true))
-                    .toList(),
+                    ,
               ],
             ],
           );
   }
 
   Widget _buildFriendTile(Map<String, dynamic> friend, {bool isRequest = false}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              isRequest ? Color(0xFFFFEFCD) : Color(0xFFFFAF04),
-              isRequest ? Color(0xFFFFE099) : Color(0xFFFFBF2D),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(15.0),
+  return Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+    child: Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            isRequest ? Color(0xFFFFEFCD) : Color(0xFFFFAF04),
+            isRequest ? Color(0xFFFFE099) : Color(0xFFFFBF2D),
+          ],
         ),
-        child: ListTile(
-          contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-          leading: CircleAvatar(
-            backgroundImage: friend['profileUrl'] != null && friend['profileUrl'].isNotEmpty
-                ? NetworkImage(friend['profileUrl']) as ImageProvider
-                : AssetImage('assets/imgs/user_image_sample.png'),
-            radius: 30,
+        borderRadius: BorderRadius.circular(15.0),
+      ),
+      child: ListTile(
+        contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+        leading: CircleAvatar(
+          backgroundImage: friend['profileUrl'] != null && friend['profileUrl'].isNotEmpty
+              ? NetworkImage(friend['profileUrl']) as ImageProvider
+              : AssetImage('assets/imgs/user_image_sample.png'),
+          radius: 30,
+        ),
+        title: Text(
+          friend['name'] ?? 'Unknown',
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: isRequest ? Colors.orange : Colors.white,
           ),
-          title: Text(
-            friend['name'] ?? 'Unknown',
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: isRequest ? Colors.orange : Colors.white,
-            ),
+        ),
+        subtitle: Text(
+          '요청번호 ${friend['friendshipId'].toString().padLeft(5, '0')}',
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 12,
+            color: isRequest ? Colors.orange : Colors.white,
           ),
-          subtitle: Text(
-            '요청번호 ${friend['friendshipId'].toString().padLeft(5, '0')}',
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 12,
-              color: isRequest ? Colors.orange : Colors.white,
-            ),
+        ),
+        trailing: IconButton(
+          icon: Icon(
+            Icons.remove_circle_outline,
+            color: isRequest ? Colors.orange : Colors.white,
+            size: 35,
           ),
-          trailing: IconButton(
-            icon: Icon(
-              Icons.remove_circle_outline,
-              color: isRequest ? Colors.orange : Colors.white,
-              size: 35,
-            ),
-            onPressed: isRequest
-                ? () {
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return ChoicePopupWidget(
-                          onConfirm: () async {
-                            await _cancelFriendRequest(friend['friendshipId']);
-                            _loadAllData();
-                          },
-                          message: '${friend['name']}님께 신청한\n친구 요청을 취소하시겠습니까?',
-                        );
-                      },
-                    );
-                  }
-                : null,
-          ),
+          onPressed: isRequest
+              ? () {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return ChoicePopupWidget(
+                        onConfirm: () async {
+                          await _cancelFriendRequest(friend['friendshipId']);
+                          _loadAllData();
+                        },
+                        message: '${friend['name']}님께 신청한\n친구 요청을 취소하시겠습니까?',
+                      );
+                    },
+                  );
+                }
+              : () {
+                  _confirmDeleteFriend(friend['friendshipId'], friend['name']);
+                }, // 삭제 버튼 추가
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
-  Future<void> _cancelFriendRequest(int friendshipId) async {
-    try {
-      final response = await apiService.cancelFriendRequest(friendshipId);
-      if (response != null && response.statusCode == 200) {
-        print("친구 요청 취소 성공");
-      } else {
+// 친구 삭제 확인 팝업 및 삭제 실행
+Future<void> _confirmDeleteFriend(int friendshipId, String friendName) async {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return ChoicePopupWidget(
+        onConfirm: () async {
+          bool success = await apiService.deleteFriend(friendshipId);
+          if (success) {
+            if (mounted) {
+              // 친구 목록에서 삭제
+              setState(() {
+                friends.removeWhere((friend) => friend['friendshipId'] == friendshipId);
+              });
+
+              // 목록 새로고침
+              await _loadAllData();
+
+              // 잠시 딜레이를 주어 SnackBar 호출
+              Future.delayed(Duration(milliseconds: 1000), () {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('$friendName님이 삭제되었습니다.')),
+                  );
+                }
+              });
+            }
+          } else {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('친구 삭제에 실패했습니다.')),
+              );
+            }
+          }
+        },
+        // 팝업에 삭제 확인 메시지 표시
+        message: '$friendName님을\n친구 목록에서 삭제하시겠습니까?',
+      );
+    },
+  );
+}
+
+
+
+
+Future<void> _cancelFriendRequest(int friendshipId) async {
+  try {
+    final response = await apiService.cancelFriendRequest(friendshipId);
+    if (response != null && response.statusCode == 200 && mounted) {
+      print("친구 요청 취소 성공");
+    } else {
+      if (mounted) {
         print("친구 요청 취소 실패");
       }
-    } catch (e) {
+    }
+  } catch (e) {
+    if (mounted) {
       print("친구 요청 취소 중 오류 발생: $e");
     }
   }
+}
+
 
   Widget _buildNoFriendsView() {
     return Center(
@@ -329,11 +387,11 @@ class NotificationDrawer extends StatelessWidget {
   final Function(int) onReject;
 
   const NotificationDrawer({
-    Key? key,
+    super.key,
     required this.notifications,
     required this.onAccept,
     required this.onReject,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

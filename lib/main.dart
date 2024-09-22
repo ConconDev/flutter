@@ -4,7 +4,6 @@ import 'package:flutter_config/flutter_config.dart';
 import 'package:concon/screen/on_boarding/sign_in.dart';
 import 'package:concon/api_service.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,7 +21,7 @@ void main() async {
 class MyApp extends StatelessWidget {
   final bool isLoggedIn;
 
-  const MyApp({Key? key, required this.isLoggedIn}) : super(key: key);
+  const MyApp({super.key, required this.isLoggedIn});
 
   @override
   Widget build(BuildContext context) {
@@ -46,27 +45,33 @@ class MyApp extends StatelessWidget {
 
 // 자동 로그인 여부 확인
 Future<bool> checkAutoLogin(ApiService apiService) async {
-  // 저장된 이메일과 비밀번호 가져오기
-  String? email = await apiService.storage.read(key: 'savedEmail');
-  String? password = await apiService.storage.read(key: 'savedPassword');
+  // 저장된 토큰 가져오기
+  String? token = await apiService.getToken();
 
-  if (email != null && password != null) {
-    // 토큰 만료 여부 확인
+  if (token != null) {
+    // 토큰이 있는 경우, 만료 여부 확인
     if (await apiService.isTokenExpired()) {
       print("토큰 만료");
-      // 토큰이 만료되었으면 자동으로 로그인 시도
-      final result = await apiService.autoLogin(email, password);
-      return result.containsKey('token'); // 자동 로그인 성공 여부 반환
+      // 토큰이 만료되었으면 이메일과 비밀번호로 자동 로그인 시도
+      String? email = await apiService.storage.read(key: 'savedEmail');
+      String? password = await apiService.storage.read(key: 'savedPassword');
+
+      if (email != null && password != null) {
+        final result = await apiService.autoLogin(email, password);
+        return result.containsKey('token'); // 자동 로그인 성공 여부 반환
+      } else {
+        // 저장된 이메일과 비밀번호가 없으면 로그인이 필요함
+        print('저장된 이메일 및 비밀번호 부재');
+        return false;
+      }
     } else {
       // 토큰이 유효한 경우 그대로 로그인 유지
       print('토큰 유효');
-      String? token = await apiService.getToken();
-      print(token);
       return true;
     }
+  } else {
+    // 토큰이 없는 경우 로그인 필요
+    print('저장된 토큰 없음, 로그인 페이지로 이동');
+    return false;
   }
-
-  // 이메일 또는 비밀번호가 없으면 로그인 필요
-  print('저장된 이메일 및 비밀번호 부재');
-  return false;
 }
